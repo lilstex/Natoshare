@@ -47,11 +47,15 @@ docker compose up
 The API will be on `http://localhost:5001`, with the Swagger docs at
 `http://localhost:5001/swagger`, and a health check at `http://localhost:5001/health`.
 
+In Development, the API brings its own database schema up to date and creates a
+super-admin login automatically on startup, you do not need to run a migration by hand.
+The seeded admin is `admin@natoshare.dev` / `NatoshareAdmin1` (see
+`appsettings.Development.json`, change these before this ever runs anywhere real).
+
 If you would rather run the API yourself and only use Docker for the database:
 
 ```bash
 docker compose up -d postgres
-dotnet ef database update --project src/Natoshare.Infrastructure --startup-project src/Natoshare.Api
 dotnet run --project src/Natoshare.Api
 ```
 
@@ -64,6 +68,17 @@ Run the backend tests with:
 
 ```bash
 dotnet test Natoshare.slnx
+```
+
+The integration tests spin up a real, throwaway Postgres in Docker for each run
+(using Testcontainers), so Docker needs to be running for them. If they fail with a
+Docker "authentication required" error, or something about Ryuk (the container
+cleanup helper), your `~/.docker/config.json` most likely has a stale or broken login
+in it, nothing to do with the tests themselves. Work around it without touching your
+real Docker login:
+
+```bash
+DOCKER_CONFIG=$(mktemp -d) TESTCONTAINERS_RYUK_DISABLED=true dotnet test Natoshare.slnx
 ```
 
 ## Running the frontend apps

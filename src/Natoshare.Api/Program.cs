@@ -1,6 +1,14 @@
 using System.Threading.RateLimiting;
+using FluentValidation;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using Natoshare.Api.Auth;
+using Natoshare.Api.Middleware;
+using Natoshare.Application.Auth;
+using Natoshare.Application.Common;
 using Natoshare.Infrastructure;
+using Natoshare.Infrastructure.Persistence;
+using Natoshare.Infrastructure.Seed;
 using Serilog;
 
 // This is the entry point of the Natoshare API. It sets up everything the app needs
@@ -80,19 +88,34 @@ try
                 }));
     });
 
-    // This wires up the Postgres database connection (see Natoshare.Infrastructure).
+    // This wires up the Postgres database connection and the login system (see
+    // Natoshare.Infrastructure).
     builder.Services.AddNatoshareInfrastructure(builder.Configuration);
+
+    // Checks how an access token is signed and who is allowed to call what.
+    builder.Services.AddNatoshareAuthentication(builder.Configuration, builder.Environment);
+
+    // Lets services read who is calling right now, from their access token.
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+
+    // Finds every FluentValidation validator in the Application project (SignupRequestValidator
+    // and so on) and makes them available to inject, instead of registering each one by hand.
+    builder.Services.AddValidatorsFromAssemblyContaining<SignupRequestValidator>();
 
     // Health checks let us (and our deploy tooling) ask "is this app actually working?"
     // We check the database connection here too, not just that the process is running.
-    var connectionString = builder.Configuration.GetConnectionString("App");
-    var healthChecksBuilder = builder.Services.AddHealthChecks();
-    if (!string.IsNullOrWhiteSpace(connectionString))
-    {
-        healthChecksBuilder.AddNpgSql(connectionString, name: "postgres");
-    }
+    // The connection string is read from IConfiguration lazily (through the service
+    // provider), for the same reason the DbContext reads it lazily, see
+    // Natoshare.Infrastructure/InfrastructureServiceCollectionExtensions.cs.
+    builder.Services.AddHealthChecks()
+        .AddNpgSql(sp => sp.GetRequiredService<IConfiguration>().GetConnectionString("App")!, name: "postgres");
 
     var app = builder.Build();
+
+    // This has to sit before everything else, so it can catch errors thrown by
+    // anything further down the pipeline, including controllers.
+    app.UseMiddleware<DomainExceptionMiddleware>();
 
     // In development we show full Swagger docs. In production this can be locked down
     // to admins only, we will revisit that in the hardening phase.
@@ -105,10 +128,30 @@ try
     app.UseHttpsRedirection();
     app.UseCors("Default");
     app.UseRateLimiter();
+    app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapControllers();
     app.MapHealthChecks("/health");
+
+    // Only in development: bring the database schema up to date, then make sure the
+    // User/Admin roles and a super-admin login exist. The migration has to happen
+    // first, seeding roles into a database with no tables yet would fail.
+    if (app.Environment.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+
+        var dbContext = scope.ServiceProvider.GetRequiredService<NatoshareDbContext>();
+        await dbContext.Database.MigrateAsync();
+
+        var adminEmail = app.Configuration["Seed:AdminEmail"];
+        var adminPassword = app.Configuration["Seed:AdminPassword"];
+
+        if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
+        {
+            await DevDataSeeder.SeedAsync(scope.ServiceProvider, adminEmail, adminPassword);
+        }
+    }
 
     app.Run();
 }

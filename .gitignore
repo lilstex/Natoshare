@@ -1,1 +1,25 @@
 docs/
+
+# .NET build output
+bin/
+obj/
+*.user
+
+# .NET tooling
+.vs/
+.idea/
+
+# Node / Next.js (each app has its own .gitignore too, this covers the workspace root)
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# env files, never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# OS noise
+.DS_Store

@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+/*
+  These are Natoshare's design tokens. They match docs/06-design-system.md.
+  If you need a new color or a new size, add it there first so the whole team is
+  looking at the same source of truth, then bring it here.
+*/
+:root {
+  --nato-bg: #f5f4fb;
+  --nato-surface: #ffffff;
+  --nato-surface-2: #efedf9;
+  --nato-border: #e5e2f1;
+  --nato-border-strong: #d4cfe7;
+
+  --nato-text: #1b1930;
+  --nato-text-muted: #6a6782;
+  --nato-text-subtle: #9a96ad;
+
+  --nato-primary: #6d4ae0;
+  --nato-primary-strong: #5836c4;
+  --nato-primary-tint: #ece7fc;
+  --nato-on-primary: #ffffff;
+  --nato-focus: #6d4ae0;
+
+  --nato-success: #12b886;
+  --nato-success-tint: #e3f7f0;
+  --nato-warning: #ee8c22;
+  --nato-warning-tint: #fbeddc;
+  --nato-danger: #e64980;
+  --nato-danger-tint: #fbe3ee;
+  --nato-info: #4c6fe8;
+  --nato-info-tint: #e5ebfc;
+
+  --gradient-brand: linear-gradient(135deg, #7a4be6 0%, #5b3ad1 52%, #4668db 116%);
+
+  --cat-rent: #6d4ae0;
+  --cat-feeding: #ee8c22;
+  --cat-transport: #4c6fe8;
+  --cat-utility: #12b886;
+  --cat-subs: #e64980;
+  --cat-invest: #f4b740;
+
+  --nato-shadow-sm: 0 1px 2px rgba(27, 25, 48, 0.07);
+  --nato-shadow-md: 0 10px 28px rgba(90, 54, 196, 0.12);
+  --nato-shadow-lg: 0 24px 56px rgba(90, 54, 196, 0.18);
+}
+
+/* This is the dark version of the tokens above, used when the visitor's system is set
+   to dark mode. We only list the values that actually change. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --nato-bg: #131120;
+    --nato-surface: #1d1a2c;
+    --nato-surface-2: #262239;
+    --nato-border: #322c46;
+    --nato-border-strong: #443c5e;
+
+    --nato-text: #f2f0fa;
+    --nato-text-muted: #a7a2bc;
+    --nato-text-subtle: #7c7791;
+
+    --nato-primary: #9075f2;
+    --nato-primary-strong: #a88ff7;
+    --nato-primary-tint: #2a2348;
+
+    --nato-success: #2cc79a;
+    --nato-success-tint: #16352e;
+    --nato-warning: #f59e3f;
+    --nato-warning-tint: #3a2c18;
+    --nato-danger: #f0619b;
+    --nato-danger-tint: #3a1e2c;
+    --nato-info: #7d97f0;
+    --nato-info-tint: #1e2540;
+
+    --gradient-brand: linear-gradient(135deg, #6a3fd6 0%, #4e32b8 55%, #3c57c4 120%);
+
+    --nato-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --nato-shadow-md: 0 12px 30px rgba(0, 0, 0, 0.45);
+    --nato-shadow-lg: 0 28px 60px rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* This lets us force dark mode later from a settings toggle, even if the visitor's
+   system is set to light mode. Not used yet, but the tokens are ready for it. */
+:root[data-theme="dark"] {
+  --nato-bg: #131120;
+  --nato-surface: #1d1a2c;
+  --nato-surface-2: #262239;
+  --nato-border: #322c46;
+  --nato-border-strong: #443c5e;
+
+  --nato-text: #f2f0fa;
+  --nato-text-muted: #a7a2bc;
+  --nato-text-subtle: #7c7791;
+
+  --nato-primary: #9075f2;
+  --nato-primary-strong: #a88ff7;
+  --nato-primary-tint: #2a2348;
+
+  --nato-success: #2cc79a;
+  --nato-success-tint: #16352e;
+  --nato-warning: #f59e3f;
+  --nato-warning-tint: #3a2c18;
+  --nato-danger: #f0619b;
+  --nato-danger-tint: #3a1e2c;
+  --nato-info: #7d97f0;
+  --nato-info-tint: #1e2540;
+
+  --gradient-brand: linear-gradient(135deg, #6a3fd6 0%, #4e32b8 55%, #3c57c4 120%);
+
+  --nato-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --nato-shadow-md: 0 12px 30px rgba(0, 0, 0, 0.45);
+  --nato-shadow-lg: 0 28px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* This block tells Tailwind about our tokens, so we can use classes like
+   "bg-primary" or "text-muted" anywhere in the app instead of typing var(...)
+   every time. */
+@theme inline {
+  --color-bg: var(--nato-bg);
+  --color-surface: var(--nato-surface);
+  --color-surface-2: var(--nato-surface-2);
+  --color-border: var(--nato-border);
+  --color-border-strong: var(--nato-border-strong);
+
+  --color-text: var(--nato-text);
+  --color-muted: var(--nato-text-muted);
+  --color-subtle: var(--nato-text-subtle);
+
+  --color-primary: var(--nato-primary);
+  --color-primary-strong: var(--nato-primary-strong);
+  --color-primary-tint: var(--nato-primary-tint);
+
+  --color-success: var(--nato-success);
+  --color-success-tint: var(--nato-success-tint);
+  --color-warning: var(--nato-warning);
+  --color-warning-tint: var(--nato-warning-tint);
+  --color-danger: var(--nato-danger);
+  --color-danger-tint: var(--nato-danger-tint);
+  --color-info: var(--nato-info);
+  --color-info-tint: var(--nato-info-tint);
+
+  --color-cat-rent: var(--cat-rent);
+  --color-cat-feeding: var(--cat-feeding);
+  --color-cat-transport: var(--cat-transport);
+  --color-cat-utility: var(--cat-utility);
+  --color-cat-subs: var(--cat-subs);
+  --color-cat-invest: var(--cat-invest);
+
+  --font-display: var(--font-sora);
+  --font-sans: var(--font-jakarta);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+}
+
+body {
+  background: var(--nato-bg);
+  color: var(--nato-text);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}

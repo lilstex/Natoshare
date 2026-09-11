@@ -1,0 +1,49 @@
+# This file lets you run the whole backend (Postgres + the API) with one command:
+#   docker compose up
+# It is meant for local development, not for production.
+
+services:
+  # The Postgres database Natoshare uses to store everything.
+  postgres:
+    image: postgres:16-alpine
+    container_name: natoshare-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: natoshare
+      POSTGRES_USER: natoshare
+      POSTGRES_PASSWORD: natoshare_dev_password
+    ports:
+      # Mapped to 5433 on your machine because 5432 is often already taken by a
+      # Postgres install on your computer. The API talks to this over the Docker
+      # network on the normal 5432 port, this mapping is only for connecting from
+      # your own machine (for example with a database GUI, or a local dotnet run).
+      - "5433:5432"
+    volumes:
+      - natoshare-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U natoshare"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # The Natoshare API. It waits for Postgres to be ready before it starts.
+  api:
+    build:
+      context: .
+      dockerfile: src/Natoshare.Api/Dockerfile
+    container_name: natoshare-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__App: "Host=postgres;Port=5432;Database=natoshare;Username=natoshare;Password=natoshare_dev_password"
+      Cors__AllowedOrigins__0: "http://localhost:3000"
+      Cors__AllowedOrigins__1: "http://localhost:3001"
+    ports:
+      - "5001:8080"
+
+volumes:
+  natoshare-postgres-data:

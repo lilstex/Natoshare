@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Natoshare.Api/Natoshare.Api.csproj" />
+    <Project Path="src/Natoshare.Application/Natoshare.Application.csproj" />
+    <Project Path="src/Natoshare.Domain/Natoshare.Domain.csproj" />
+    <Project Path="src/Natoshare.Infrastructure/Natoshare.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Natoshare.Api.IntegrationTests/Natoshare.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Natoshare.Application.Tests/Natoshare.Application.Tests.csproj" />
+    <Project Path="tests/Natoshare.Domain.Tests/Natoshare.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

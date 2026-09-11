@@ -1,0 +1,68 @@
+# This workflow runs on every push and pull request. It checks that the backend
+# builds and its tests pass, that the API can be built into a Docker image, and that
+# both frontend apps lint and build without errors.
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  backend:
+    name: Backend build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Natoshare.slnx
+
+      - name: Build
+        run: dotnet build Natoshare.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Natoshare.slnx --no-build --configuration Release
+
+  docker:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker build -f src/Natoshare.Api/Dockerfile -t natoshare-api:ci .
+
+  frontend:
+    # user-app and admin-app are npm workspaces sharing one lockfile at the repo
+    # root, so we install once and then lint/build each app by name.
+    name: Frontend lint and build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [user-app, admin-app]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --workspace=${{ matrix.app }}
+
+      - name: Build
+        run: npm run build --workspace=${{ matrix.app }}

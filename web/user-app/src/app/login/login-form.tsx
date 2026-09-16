@@ -50,7 +50,15 @@ export function LoginForm() {
       });
 
       setSession(result);
-      router.push("/");
+
+      // Someone who never finished setting up their account gets sent back to the
+      // wizard instead of a home page that will not make sense without it. The login
+      // itself already succeeded at this point, so if this check fails for any reason
+      // we still send them somewhere useful instead of showing a login error.
+      const onboardingPath = await apiFetch<{ done: boolean }>("/onboarding/state", { token: result.accessToken })
+        .then((state) => (state.done ? "/" : "/onboarding"))
+        .catch(() => "/onboarding");
+      router.push(onboardingPath);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {

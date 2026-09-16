@@ -43,7 +43,7 @@ export function SignupForm() {
       });
 
       setSession(result);
-      router.push("/");
+      router.push("/onboarding");
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);

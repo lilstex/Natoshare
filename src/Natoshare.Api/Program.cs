@@ -153,6 +153,21 @@ try
         }
     }
 
+    // The budget templates (Everyday, 50/30/20, and so on) are real content the
+    // onboarding wizard needs, in every environment, not just development. If the
+    // database has not been migrated yet, this just logs a warning instead of
+    // crashing the whole app on startup.
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<NatoshareDbContext>();
+        await Natoshare.Infrastructure.Seed.ReferenceDataSeeder.SeedAsync(dbContext);
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Could not seed budget templates, has the database been migrated yet?");
+    }
+
     app.Run();
 }
 catch (Exception ex) when (ex is not HostAbortedException)

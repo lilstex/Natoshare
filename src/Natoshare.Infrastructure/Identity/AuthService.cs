@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Common;
+using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Common;
 using Natoshare.Domain.Identity;
 using Natoshare.Infrastructure.Persistence;
@@ -72,6 +73,7 @@ public class AuthService : IAuthService
         }
 
         await _userManager.AddToRoleAsync(user, DefaultRole);
+        await SeedDefaultCategoriesAsync(user.Id, now, cancellationToken);
 
         var result = await IssueTokensAsync(user, DefaultRole, ip, cancellationToken);
 
@@ -243,6 +245,26 @@ public class AuthService : IAuthService
         }
 
         await _auditLogger.LogAsync(user.Id, "User", "PasswordChanged", "User", user.Id.ToString(), null, null, cancellationToken);
+    }
+
+    // Gives a brand new account the default set of categories (Rent, Feeding, and so
+    // on), so onboarding always has something to start from. They do not have a
+    // percentage yet, that only happens once onboarding creates the first allocation
+    // version.
+    private async Task SeedDefaultCategoriesAsync(Guid userId, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var categories = DefaultCategories.Items.Select((item, index) => new Category
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = userId,
+            Name = item.Name,
+            Kind = item.Kind,
+            SortOrder = index,
+            CreatedAt = now,
+        });
+
+        _dbContext.Categories.AddRange(categories);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<AuthResult> IssueTokensAsync(User user, string role, string? ip, CancellationToken cancellationToken)

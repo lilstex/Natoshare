@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Natoshare.Application.Auth;
+using Natoshare.Application.Budgeting;
 using Natoshare.Application.Common;
 using Natoshare.Application.Me;
 using Natoshare.Domain.Identity;
 using Natoshare.Infrastructure.Audit;
+using Natoshare.Infrastructure.Budgeting;
 using Natoshare.Infrastructure.Identity;
 using Natoshare.Infrastructure.Persistence;
 using Natoshare.Infrastructure.Time;
@@ -67,6 +69,15 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IMeService, MeService>();
+
+        // AllocationService is registered as itself (not just as IAllocationService),
+        // because CategoryService and OnboardingService both reuse a couple of its
+        // internal helpers directly, so all three need to share the very same
+        // instance within one request.
+        services.AddScoped<AllocationService>();
+        services.AddScoped<IAllocationService>(sp => sp.GetRequiredService<AllocationService>());
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IOnboardingService, OnboardingService>();
 
         return services;
     }

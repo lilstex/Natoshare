@@ -42,6 +42,9 @@ export function SiteHeader() {
 
       {user ? (
         <nav className="flex items-center gap-4">
+          <Link href="/dashboard" className="text-sm font-medium text-muted hover:text-text">
+            Dashboard
+          </Link>
           <Link href="/categories" className="text-sm font-medium text-muted hover:text-text">
             Categories
           </Link>

@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Natoshare.Api.Filters;
 using Natoshare.Api.Validation;
 using Natoshare.Application.Budgeting;
 using Natoshare.Application.Common;
@@ -59,6 +60,7 @@ public class AllocationController : ApiControllerBase
     }
 
     [HttpPost("versions")]
+    [ServiceFilter(typeof(IdempotencyActionFilter))]
     public async Task<ActionResult<AllocationVersionResult>> CreateVersion(CreateAllocationVersionRequest request, CancellationToken cancellationToken)
     {
         await _createVersionValidator.ValidateOrThrowAsync(request, cancellationToken);

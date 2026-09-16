@@ -144,7 +144,7 @@ export function CategoriesScreen() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
-      <button type="button" onClick={() => router.push("/")} className="text-sm font-medium text-muted hover:text-text">
+      <button type="button" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-muted hover:text-text">
         ← Back
       </button>
 

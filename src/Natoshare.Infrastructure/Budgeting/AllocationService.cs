@@ -73,6 +73,17 @@ public class AllocationService : IAllocationService
             throw new ConflictException("You can only set this from the current month onwards.");
         }
 
+        // Once a month has real income or expenses logged against it (Phase 3), its
+        // numbers are already snapshotted. Re-snapshotting an open month with new
+        // percentages is real month-lifecycle work that belongs to Phase 5, not here,
+        // so for now we just stop it from going stale instead of getting it wrong.
+        var monthAlreadyOpened = await _dbContext.BudgetMonths.AnyAsync(
+            m => m.UserId == userId && m.Year == effectiveFromMonth.Year && m.Month == effectiveFromMonth.Month, cancellationToken);
+        if (monthAlreadyOpened)
+        {
+            throw new ConflictException("This month already has activity logged against it, changes can only apply from next month for now.");
+        }
+
         var categoryIds = request.Allocations.Select(a => a.CategoryId).Distinct().ToList();
         var categories = await _dbContext.Categories
             .Where(c => c.UserId == userId && categoryIds.Contains(c.Id))

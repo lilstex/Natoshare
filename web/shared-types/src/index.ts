@@ -139,3 +139,140 @@ export type OnboardingCompleteRequest = {
   effectiveFromMonth: MonthInput;
   categories: OnboardingCategoryInput[];
 };
+
+// --- Ledger (Phase 3): income, expenses, deficits, balances -----------------------
+
+export type IncomeType = "Allocatable" | "Flexible";
+export type ExpenseSource = "Category" | "FlexiblePool";
+export type TransactionStatus = "Active" | "Reversed";
+
+export type IncomeSplit = {
+  categoryId: string;
+  categoryName: string;
+  amount: MoneyAmount;
+};
+
+export type Income = {
+  id: string;
+  type: IncomeType;
+  amount: MoneyAmount;
+  description: string;
+  occurredOn: string;
+  status: TransactionStatus;
+  splits: IncomeSplit[];
+};
+
+export type LogIncomeRequest = {
+  type: IncomeType;
+  amount: number;
+  description: string;
+  occurredOn: string | null;
+};
+
+export type Expense = {
+  id: string;
+  amount: MoneyAmount;
+  description: string;
+  source: ExpenseSource;
+  categoryId: string | null;
+  subCategory: string | null;
+  occurredOn: string;
+  status: TransactionStatus;
+  tags: string[];
+};
+
+export type LogExpenseRequest = {
+  amount: number;
+  description: string;
+  source: ExpenseSource;
+  categoryId: string | null;
+  subCategory: string | null;
+  occurredOn: string | null;
+  tags: string[] | null;
+};
+
+// "OnTrack" | "OverPace" | "InDeficit" | "NotApplicable" (a Flexible Pool expense has
+// no category to pace against).
+export type PacingStatus = "OnTrack" | "OverPace" | "InDeficit" | "NotApplicable";
+
+export type Pacing = {
+  categoryStatus: PacingStatus;
+  projected: MoneyAmount;
+  safeToSpend: MoneyAmount;
+};
+
+export type LogExpenseResult = {
+  expense: Expense;
+  pacing: Pacing;
+  wentIntoDeficit: boolean;
+  deficit: { categoryId: string; amount: MoneyAmount } | null;
+};
+
+export type SuggestedSource = {
+  kind: "OwnSavings" | "OtherCategorySavings" | "FlexiblePool";
+  categoryId: string | null;
+  availableToUse: MoneyAmount;
+};
+
+export type DeficitListItem = {
+  categoryId: string;
+  name: string;
+  amount: MoneyAmount;
+  carriedInDeficit: MoneyAmount;
+  suggestedSources: SuggestedSource[];
+};
+
+// Phase 3 only wires up the three methods that move real money in right now, carrying
+// a deficit to next month is a month-close decision (Phase 5).
+export type DeficitResolutionMethod = "OwnSavings" | "OtherCategorySavings" | "FlexiblePool";
+
+export type ResolveDeficitRequest = {
+  categoryId: string;
+  year: number;
+  month: number;
+  amount: number;
+  method: DeficitResolutionMethod;
+  sourceCategoryId: string | null;
+  note: string | null;
+};
+
+export type PaceInfo = {
+  projected: MoneyAmount;
+  status: PacingStatus;
+};
+
+export type SafeToSpend = {
+  daily: MoneyAmount;
+  weekly: MoneyAmount;
+};
+
+export type CategoryBalance = {
+  categoryId: string;
+  name: string;
+  kind: CategoryKind;
+  allocated: MoneyAmount;
+  carriedInSavings: MoneyAmount;
+  carriedInDeficit: MoneyAmount;
+  covered: MoneyAmount;
+  funded: MoneyAmount;
+  spent: MoneyAmount;
+  available: MoneyAmount;
+  deficit: MoneyAmount;
+  savingsBalance: MoneyAmount;
+  deployedBalance: MoneyAmount;
+  pace: PaceInfo;
+  safeToSpend: SafeToSpend;
+};
+
+export type BalancesResult = {
+  month: { year: number; month: number; status: string };
+  categories: CategoryBalance[];
+  flexiblePool: { balance: MoneyAmount };
+  totals: {
+    allocated: MoneyAmount;
+    spent: MoneyAmount;
+    available: MoneyAmount;
+    deficit: MoneyAmount;
+    savedToDate: MoneyAmount;
+  };
+};

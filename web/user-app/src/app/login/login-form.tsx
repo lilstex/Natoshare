@@ -56,7 +56,7 @@ export function LoginForm() {
       // itself already succeeded at this point, so if this check fails for any reason
       // we still send them somewhere useful instead of showing a login error.
       const onboardingPath = await apiFetch<{ done: boolean }>("/onboarding/state", { token: result.accessToken })
-        .then((state) => (state.done ? "/" : "/onboarding"))
+        .then((state) => (state.done ? "/dashboard" : "/onboarding"))
         .catch(() => "/onboarding");
       router.push(onboardingPath);
     } catch (err) {

@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Natoshare.Domain.Audit;
 using Natoshare.Domain.Budgeting;
+using Natoshare.Domain.Common;
 using Natoshare.Domain.Identity;
+using Natoshare.Domain.Ledger;
+using Natoshare.Domain.Transactions;
 
 namespace Natoshare.Infrastructure.Persistence;
 
@@ -36,6 +39,28 @@ public class NatoshareDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gu
     public DbSet<BudgetTemplate> BudgetTemplates => Set<BudgetTemplate>();
 
     public DbSet<BudgetTemplateItem> BudgetTemplateItems => Set<BudgetTemplateItem>();
+
+    public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
+
+    public DbSet<BudgetMonth> BudgetMonths => Set<BudgetMonth>();
+
+    public DbSet<CategoryMonth> CategoryMonths => Set<CategoryMonth>();
+
+    public DbSet<Income> Incomes => Set<Income>();
+
+    public DbSet<IncomeSplit> IncomeSplits => Set<IncomeSplit>();
+
+    public DbSet<Expense> Expenses => Set<Expense>();
+
+    public DbSet<Tag> Tags => Set<Tag>();
+
+    public DbSet<ExpenseTag> ExpenseTags => Set<ExpenseTag>();
+
+    public DbSet<Reallocation> Reallocations => Set<Reallocation>();
+
+    public DbSet<DeficitResolution> DeficitResolutions => Set<DeficitResolution>();
+
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

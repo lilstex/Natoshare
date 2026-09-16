@@ -5,11 +5,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Budgeting;
 using Natoshare.Application.Common;
+using Natoshare.Application.Ledger;
 using Natoshare.Application.Me;
 using Natoshare.Domain.Identity;
 using Natoshare.Infrastructure.Audit;
 using Natoshare.Infrastructure.Budgeting;
 using Natoshare.Infrastructure.Identity;
+using Natoshare.Infrastructure.Ledger;
 using Natoshare.Infrastructure.Persistence;
 using Natoshare.Infrastructure.Time;
 
@@ -78,6 +80,16 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IAllocationService>(sp => sp.GetRequiredService<AllocationService>());
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IOnboardingService, OnboardingService>();
+
+        // The ledger engine and everything built on top of it.
+        services.AddScoped<ILedgerService, LedgerService>();
+        services.AddScoped<IBudgetMonthService, BudgetMonthService>();
+        services.AddScoped<IIncomeService, IncomeService>();
+        services.AddScoped<IExpenseService, ExpenseService>();
+        services.AddScoped<IReallocationService, ReallocationService>();
+        services.AddScoped<IDeficitService, DeficitService>();
+        services.AddScoped<IBalanceService, BalanceService>();
+        services.AddScoped<ILedgerReadService, LedgerReadService>();
 
         return services;
     }

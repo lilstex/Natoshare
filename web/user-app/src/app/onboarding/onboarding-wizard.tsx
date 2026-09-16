@@ -73,7 +73,7 @@ export function OnboardingWizard() {
     apiFetch<{ done: boolean }>("/onboarding/state", { token: accessToken })
       .then((state) => {
         if (state.done) {
-          router.replace("/");
+          router.replace("/dashboard");
         } else {
           setIsChecking(false);
         }
@@ -196,7 +196,7 @@ export function OnboardingWizard() {
 
     try {
       await apiFetch("/onboarding/complete", { method: "POST", token: accessToken, body: request });
-      router.push("/");
+      router.push("/dashboard");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {

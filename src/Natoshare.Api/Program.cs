@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Natoshare.Api.Auth;
+using Natoshare.Api.Filters;
 using Natoshare.Api.Middleware;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Common;
@@ -98,6 +99,11 @@ try
     // Lets services read who is calling right now, from their access token.
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+
+    // Lets a POST endpoint accept an Idempotency-Key header so a retried request
+    // never logs the same money twice. Applied per-action with [ServiceFilter], not
+    // globally, only the writes that actually create something need it.
+    builder.Services.AddScoped<IdempotencyActionFilter>();
 
     // Finds every FluentValidation validator in the Application project (SignupRequestValidator
     // and so on) and makes them available to inject, instead of registering each one by hand.

@@ -153,6 +153,8 @@ public class ExpenseService : IExpenseService
             throw new ConflictException("This expense has already been removed.");
         }
 
+        await EnsureMonthNotClosedAsync(expense.BudgetMonthId, cancellationToken);
+
         var newOccurredOn = request.OccurredOn ?? expense.OccurredOn;
         if (newOccurredOn.Year != expense.OccurredOn.Year || newOccurredOn.Month != expense.OccurredOn.Month)
         {
@@ -226,6 +228,7 @@ public class ExpenseService : IExpenseService
             return;
         }
 
+        await EnsureMonthNotClosedAsync(expense.BudgetMonthId, cancellationToken);
         await _ledgerService.ReverseAsync(SourceTxnType.Expense, expense.Id, "Deleted", cancellationToken);
 
         if (expense.Source == ExpenseSource.Category && expense.CategoryId is not null)
@@ -329,6 +332,18 @@ public class ExpenseService : IExpenseService
         return await _dbContext.Expenses.Include(e => e.ExpenseTags)
             .FirstOrDefaultAsync(e => e.Id == expenseId && e.UserId == userId, cancellationToken)
             ?? throw new NotFoundException("We could not find that expense.");
+    }
+
+    // A closed month is frozen for good, editing or deleting something that
+    // happened in it would silently invalidate numbers that were already rolled
+    // over or carried forward.
+    private async Task EnsureMonthNotClosedAsync(Guid budgetMonthId, CancellationToken cancellationToken)
+    {
+        var status = await _dbContext.BudgetMonths.Where(m => m.Id == budgetMonthId).Select(m => m.Status).FirstAsync(cancellationToken);
+        if (status == BudgetMonthStatus.Closed)
+        {
+            throw new ConflictException("This month is closed, nothing can be changed in it any more.");
+        }
     }
 
     private async Task<Dictionary<Guid, string>> TagNameLookupAsync(Guid userId, CancellationToken cancellationToken)

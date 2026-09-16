@@ -8,6 +8,7 @@ using Natoshare.Application.Common;
 using Natoshare.Application.Insights;
 using Natoshare.Application.Ledger;
 using Natoshare.Application.Me;
+using Natoshare.Application.Months;
 using Natoshare.Application.Notifications;
 using Natoshare.Domain.Identity;
 using Natoshare.Infrastructure.Audit;
@@ -15,6 +16,7 @@ using Natoshare.Infrastructure.Budgeting;
 using Natoshare.Infrastructure.Identity;
 using Natoshare.Infrastructure.Insights;
 using Natoshare.Infrastructure.Ledger;
+using Natoshare.Infrastructure.Months;
 using Natoshare.Infrastructure.Notifications;
 using Natoshare.Infrastructure.Persistence;
 using Natoshare.Infrastructure.Time;
@@ -99,6 +101,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IAlertEvaluationService, AlertEvaluationService>();
         services.AddScoped<IInsightsService, InsightsService>();
+
+        // Month lifecycle: closing a month, and the admin reopen path.
+        services.AddScoped<IMonthLifecycleService, MonthLifecycleService>();
 
         return services;
     }

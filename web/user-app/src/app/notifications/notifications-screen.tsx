@@ -18,6 +18,10 @@ const KIND_LABELS: Record<AdjustableAlertKind, { title: string; description: str
   OverspendCategory: { title: "Category goes over budget", description: "Warn the moment a category first crosses its funded amount." },
   CategoryInDeficit: { title: "Category stays in deficit", description: "A daily reminder for as long as a category is still over budget." },
   SafeToSpendLow: { title: "Safe-to-spend running low", description: "Warn when what is safe to spend today has dropped a lot." },
+  MonthCloseReminder: { title: "Month still open", description: "Remind me if a month is still sitting open a few days after it ended." },
+  FixedAccountUnconfirmed: { title: "Fixed account not confirmed", description: "Let me know if a fixed account transfer was never confirmed." },
+  CarriedDeficitApplied: { title: "Deficit carried in", description: "Tell me when a new month opens with a deficit carried in from last month." },
+  MonthEndSummary: { title: "Month closed summary", description: "A wrap-up of what I spent and saved once a month is closed." },
 };
 
 // The notification centre: everything Natoshare has told the user, and a place to

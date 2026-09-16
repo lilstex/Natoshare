@@ -32,4 +32,16 @@ public enum SourceTxnType
     PromiseRedemption,
     LoanRepayment,
     AdminAdjustment,
+
+    // Confirming a FixedAccount category's external transfer is its own action, not
+    // part of closing the month (a user can confirm any time during the month, well
+    // before they actually close it), so it needs its own source instead of sharing
+    // MonthClose, keeping the two independently reversible.
+    FixedAccountConfirmation,
+
+    // The savings and deficit a month carries IN from the previous closed month are
+    // posted when THIS month opens, not when the previous one closed. Keeping this
+    // separate from MonthClose means reopening a month only undoes what closing IT
+    // posted, never the carry-in it received when it first opened.
+    MonthOpen,
 }

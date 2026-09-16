@@ -4,10 +4,11 @@ namespace Natoshare.Application.Notifications;
 
 internal static class NotificationKindValidation
 {
-    // Only the four alert kinds Phase 4 actually evaluates can be turned on or off
+    // Only alert kinds a real use-case actually evaluates can be turned on or off
     // here, the rest belong to features that do not exist yet.
     public static bool IsAdjustableNow(string kind) =>
-        kind is "OverPaceCategory" or "OverspendCategory" or "CategoryInDeficit" or "SafeToSpendLow";
+        kind is "OverPaceCategory" or "OverspendCategory" or "CategoryInDeficit" or "SafeToSpendLow"
+            or "MonthCloseReminder" or "FixedAccountUnconfirmed" or "CarriedDeficitApplied" or "MonthEndSummary";
 }
 
 public class UpdateAlertPreferenceInputValidator : AbstractValidator<UpdateAlertPreferenceInput>

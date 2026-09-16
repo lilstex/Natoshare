@@ -9,6 +9,7 @@ using Natoshare.Api.Filters;
 using Natoshare.Api.Middleware;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Common;
+using Natoshare.Application.Months;
 using Natoshare.Application.Notifications;
 using Natoshare.Infrastructure;
 using Natoshare.Infrastructure.Persistence;
@@ -198,6 +199,13 @@ try
         "evaluate-alerts",
         service => service.EvaluateAllOpenMonthsAsync(CancellationToken.None),
         Cron.Hourly());
+
+    // Once a day, nudges anyone who still has an old month sitting Open well past
+    // when it ended, so a month never just gets forgotten about.
+    RecurringJob.AddOrUpdate<IMonthLifecycleService>(
+        "month-close-reminders",
+        service => service.EvaluateCloseRemindersAsync(CancellationToken.None),
+        Cron.Daily());
 
     app.Run();
 }

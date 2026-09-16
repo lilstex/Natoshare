@@ -205,7 +205,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("EntityType", "EntityId");
 
-                    b.ToTable("AuditEvents");
+                    b.ToTable("AuditEvents", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.AllocationConfigVersion", b =>
@@ -237,7 +237,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "EffectiveFromMonth");
 
-                    b.ToTable("AllocationConfigVersions");
+                    b.ToTable("AllocationConfigVersions", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.BudgetMonth", b =>
@@ -280,7 +280,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Year", "Month")
                         .IsUnique();
 
-                    b.ToTable("BudgetMonths");
+                    b.ToTable("BudgetMonths", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.BudgetTemplate", b =>
@@ -304,7 +304,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BudgetTemplates");
+                    b.ToTable("BudgetTemplates", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.BudgetTemplateItem", b =>
@@ -336,7 +336,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("BudgetTemplateId");
 
-                    b.ToTable("BudgetTemplateItems");
+                    b.ToTable("BudgetTemplateItems", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.Category", b =>
@@ -382,7 +382,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Name")
                         .IsUnique();
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.CategoryAllocation", b =>
@@ -406,7 +406,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("CategoryAllocations");
+                    b.ToTable("CategoryAllocations", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.CategoryMonth", b =>
@@ -468,7 +468,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("BudgetMonthId", "CategoryId")
                         .IsUnique();
 
-                    b.ToTable("CategoryMonths");
+                    b.ToTable("CategoryMonths", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Common.IdempotencyRecord", b =>
@@ -500,7 +500,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Key")
                         .IsUnique();
 
-                    b.ToTable("IdempotencyRecords");
+                    b.ToTable("IdempotencyRecords", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Identity.DataExportRequest", b =>
@@ -531,7 +531,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DataExportRequests");
+                    b.ToTable("DataExportRequests", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Identity.PasswordResetToken", b =>
@@ -563,7 +563,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PasswordResetTokens");
+                    b.ToTable("PasswordResetTokens", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Identity.RefreshToken", b =>
@@ -604,7 +604,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Identity.User", b =>
@@ -773,7 +773,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "Account", "AccountCategoryId");
 
-                    b.ToTable("LedgerEntries");
+                    b.ToTable("LedgerEntries", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Notifications.AlertPreference", b =>
@@ -804,7 +804,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Kind")
                         .IsUnique();
 
-                    b.ToTable("AlertPreferences");
+                    b.ToTable("AlertPreferences", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Notifications.Notification", b =>
@@ -859,7 +859,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "Kind", "RelatedEntityId", "CreatedAt");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.DeficitResolution", b =>
@@ -908,7 +908,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("BudgetMonthId", "CategoryId");
 
-                    b.ToTable("DeficitResolutions");
+                    b.ToTable("DeficitResolutions", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Expense", b =>
@@ -962,7 +962,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "OccurredOn");
 
-                    b.ToTable("Expenses");
+                    b.ToTable("Expenses", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.ExpenseTag", b =>
@@ -977,7 +977,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("ExpenseTags");
+                    b.ToTable("ExpenseTags", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Income", b =>
@@ -1022,7 +1022,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "OccurredOn");
 
-                    b.ToTable("Incomes");
+                    b.ToTable("Incomes", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.IncomeSplit", b =>
@@ -1046,7 +1046,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("IncomeId");
 
-                    b.ToTable("IncomeSplits");
+                    b.ToTable("IncomeSplits", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Reallocation", b =>
@@ -1101,7 +1101,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "OccurredOn");
 
-                    b.ToTable("Reallocations");
+                    b.ToTable("Reallocations", (string)null);
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Tag", b =>
@@ -1123,7 +1123,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Name")
                         .IsUnique();
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

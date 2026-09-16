@@ -314,7 +314,15 @@ export type Notification = {
 
 // Only these four kinds can actually be adjusted right now, the rest have no working
 // alert behind them yet.
-export type AdjustableAlertKind = "OverPaceCategory" | "OverspendCategory" | "CategoryInDeficit" | "SafeToSpendLow";
+export type AdjustableAlertKind =
+  | "OverPaceCategory"
+  | "OverspendCategory"
+  | "CategoryInDeficit"
+  | "SafeToSpendLow"
+  | "MonthCloseReminder"
+  | "FixedAccountUnconfirmed"
+  | "CarriedDeficitApplied"
+  | "MonthEndSummary";
 
 export type AlertPreference = {
   kind: AdjustableAlertKind;
@@ -357,4 +365,95 @@ export type PacingInsight = {
   projected: MoneyAmount;
   status: PacingStatus;
   safeToSpendDaily: MoneyAmount;
+};
+
+// --- Month lifecycle (Phase 5) -----------------------
+
+export type MonthStatus = "Open" | "Closed";
+
+export type MonthSummaryListItem = {
+  year: number;
+  month: number;
+  status: MonthStatus;
+  fixedIncomeSnapshot: MoneyAmount;
+};
+
+export type CategoryMonthDetail = {
+  categoryId: string;
+  name: string;
+  kind: CategoryKind;
+  allocated: MoneyAmount;
+  carriedInSavings: MoneyAmount;
+  carriedInDeficit: MoneyAmount;
+  covered: MoneyAmount;
+  funded: MoneyAmount;
+  spent: MoneyAmount;
+  available: MoneyAmount;
+  deficit: MoneyAmount;
+  externalTransferConfirmed: boolean;
+  externalTransferAmount: MoneyAmount | null;
+  externalTransferConfirmedAt: string | null;
+  savedThisMonth: MoneyAmount | null;
+  deficitAtClose: MoneyAmount | null;
+  deficitResolvedVia: string | null;
+  carriedOutSavings: MoneyAmount | null;
+  carriedOutDeficit: MoneyAmount | null;
+};
+
+export type MonthDetail = {
+  year: number;
+  month: number;
+  status: MonthStatus;
+  fixedIncomeSnapshot: MoneyAmount;
+  closedAt: string | null;
+  categories: CategoryMonthDetail[];
+};
+
+export type FixedAccountToConfirm = {
+  categoryId: string;
+  name: string;
+  allocated: MoneyAmount;
+};
+
+export type ProjectedSaving = {
+  categoryId: string;
+  name: string;
+  saved: MoneyAmount;
+};
+
+export type ClosePreview = {
+  missingIncomeHint: string | null;
+  fixedAccountsToConfirm: FixedAccountToConfirm[];
+  projectedSavings: ProjectedSaving[];
+  deficits: DeficitListItem[];
+  totalSavings: MoneyAmount;
+};
+
+export type ConfirmFixedAccountRequest = {
+  categoryId: string;
+  amount: number;
+  transferredOn: string;
+};
+
+export type CloseDeficitResolutionInput = {
+  categoryId: string;
+  amount: number;
+  method: DeficitResolutionMethod;
+  sourceCategoryId: string | null;
+  note: string | null;
+};
+
+export type CloseMonthRequest = {
+  fixedAccountConfirmations: ConfirmFixedAccountRequest[] | null;
+  deficitResolutions: CloseDeficitResolutionInput[];
+  promiseRedemptions: null;
+  rebalances: null;
+};
+
+export type CloseMonthResult = {
+  year: number;
+  month: number;
+  status: MonthStatus;
+  closedAt: string;
+  categories: CategoryMonthDetail[];
 };

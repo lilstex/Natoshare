@@ -24,16 +24,18 @@ public class AlertsAndNotificationsTests : IClassFixture<NatoshareApiFactory>
     }
 
     [Fact]
-    public async Task A_new_account_already_has_the_four_phase_four_alert_preferences_enabled()
+    public async Task A_new_account_already_has_every_currently_evaluated_alert_preference_enabled()
     {
         var (accessToken, _) = await SetUpAccountAsync("prefs", 1000m, [("Rent", "FixedAccount", 50m), ("Food", "Standard", 50m)]);
 
         var preferences = await GetAsync<List<AlertPreferenceDto>>("/api/v1/notifications/preferences", accessToken);
 
-        preferences.Should().HaveCount(4);
+        preferences.Should().HaveCount(8);
         preferences.Should().OnlyContain(p => p.Enabled);
-        preferences.Select(p => p.Kind).Should().BeEquivalentTo(
-            ["OverPaceCategory", "OverspendCategory", "CategoryInDeficit", "SafeToSpendLow"]);
+        preferences.Select(p => p.Kind).Should().BeEquivalentTo([
+            "OverPaceCategory", "OverspendCategory", "CategoryInDeficit", "SafeToSpendLow",
+            "MonthCloseReminder", "FixedAccountUnconfirmed", "CarriedDeficitApplied", "MonthEndSummary",
+        ]);
     }
 
     [Fact]

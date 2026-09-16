@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type {
   BalancesResult,
   CategoryBalance,
@@ -100,6 +101,9 @@ export function DashboardScreen() {
             {balances ? `${monthName(balances.month.month)} ${balances.month.year}` : "Your money"}
           </h1>
           <div className="flex gap-2">
+            <Link href="/close-month" className="inline-flex h-11 items-center justify-center rounded-full border border-border-strong bg-surface px-6 text-sm font-semibold text-text transition-colors hover:bg-surface-2">
+              Close month
+            </Link>
             <Button type="button" variant="secondary" onClick={() => setShowExpenseForm((v) => !v)}>
               Log expense
             </Button>

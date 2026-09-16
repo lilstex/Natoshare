@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
+import { NotificationBell } from "@/components/notification-bell";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -48,6 +49,7 @@ export function SiteHeader() {
           <Link href="/categories" className="text-sm font-medium text-muted hover:text-text">
             Categories
           </Link>
+          <NotificationBell accessToken={accessToken} />
           <span className="text-sm text-muted">
             Hi, <span className="font-semibold text-text">{user.displayName}</span>
           </span>

@@ -7,6 +7,7 @@ using Natoshare.Application.Common;
 using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Common;
 using Natoshare.Domain.Identity;
+using Natoshare.Domain.Notifications;
 using Natoshare.Infrastructure.Persistence;
 
 namespace Natoshare.Infrastructure.Identity;
@@ -74,6 +75,7 @@ public class AuthService : IAuthService
 
         await _userManager.AddToRoleAsync(user, DefaultRole);
         await SeedDefaultCategoriesAsync(user.Id, now, cancellationToken);
+        await SeedDefaultAlertPreferencesAsync(user.Id, cancellationToken);
 
         var result = await IssueTokensAsync(user, DefaultRole, ip, cancellationToken);
 
@@ -264,6 +266,24 @@ public class AuthService : IAuthService
         });
 
         _dbContext.Categories.AddRange(categories);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    // Gives a brand new account sensible alert settings from day one, so pacing and
+    // deficit alerts already work without a trip to a settings page first.
+    private async Task SeedDefaultAlertPreferencesAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var preferences = DefaultAlertPreferences.Items.Select(item => new AlertPreference
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = userId,
+            Kind = item.Kind,
+            Enabled = true,
+            ThresholdPercent = item.ThresholdPercent,
+            LeadDays = item.LeadDays,
+        });
+
+        _dbContext.AlertPreferences.AddRange(preferences);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 

@@ -1,5 +1,7 @@
 using System.Threading.RateLimiting;
 using FluentValidation;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Natoshare.Api.Auth;
@@ -7,6 +9,7 @@ using Natoshare.Api.Filters;
 using Natoshare.Api.Middleware;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Common;
+using Natoshare.Application.Notifications;
 using Natoshare.Infrastructure;
 using Natoshare.Infrastructure.Persistence;
 using Natoshare.Infrastructure.Seed;
@@ -117,6 +120,16 @@ try
     builder.Services.AddHealthChecks()
         .AddNpgSql(sp => sp.GetRequiredService<IConfiguration>().GetConnectionString("App")!, name: "postgres");
 
+    // Hangfire runs our recurring background job (checking everyone's pacing and
+    // deficits, not just right after a write). It keeps its own tables in the same
+    // Postgres database. Same lazy connection-string trick as the DbContext above.
+    builder.Services.AddHangfire((serviceProvider, config) =>
+    {
+        var connectionString = serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("App")!;
+        config.UsePostgreSqlStorage(options => options.UseNpgsqlConnection(connectionString));
+    });
+    builder.Services.AddHangfireServer();
+
     var app = builder.Build();
 
     // This has to sit before everything else, so it can catch errors thrown by
@@ -129,6 +142,10 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI();
+
+        // Same story as Swagger, wide open in development only, admin-only access
+        // is hardening-phase work.
+        app.UseHangfireDashboard();
     }
 
     app.UseHttpsRedirection();
@@ -173,6 +190,14 @@ try
     {
         Log.Warning(ex, "Could not seed budget templates, has the database been migrated yet?");
     }
+
+    // Checks every user's pacing and deficits once an hour, this is what catches an
+    // alert that time passing causes (like a category quietly drifting over pace)
+    // instead of a new write, those are already checked right when they happen.
+    RecurringJob.AddOrUpdate<IAlertEvaluationService>(
+        "evaluate-alerts",
+        service => service.EvaluateAllOpenMonthsAsync(CancellationToken.None),
+        Cron.Hourly());
 
     app.Run();
 }

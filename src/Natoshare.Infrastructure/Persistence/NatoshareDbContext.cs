@@ -6,6 +6,7 @@ using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Common;
 using Natoshare.Domain.Identity;
 using Natoshare.Domain.Ledger;
+using Natoshare.Domain.Notifications;
 using Natoshare.Domain.Transactions;
 
 namespace Natoshare.Infrastructure.Persistence;
@@ -61,6 +62,10 @@ public class NatoshareDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gu
     public DbSet<DeficitResolution> DeficitResolutions => Set<DeficitResolution>();
 
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
+
+    public DbSet<AlertPreference> AlertPreferences => Set<AlertPreference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -181,6 +181,21 @@ public class MonthCategorySnapshot
     public Domain.Common.Money Covered { get; init; }
 
     public Domain.Common.Money? ExternalTransferAmount { get; init; }
+
+    // Rebuilds a real CategoryMonth from this snapshot, just so callers can reuse
+    // the actual Funded/Available/Deficit math instead of copying it out by hand.
+    // The Id fields are left blank on purpose, this is only ever used for its
+    // numbers, never saved.
+    public Domain.Budgeting.CategoryMonth ToCategoryMonth() => new()
+    {
+        CategoryId = CategoryId,
+        AllocatedAmount = Allocated,
+        CarriedInSavings = CarriedInSavings,
+        CarriedInDeficit = CarriedInDeficit,
+        SpentAmount = Spent,
+        CoveredAmount = Covered,
+        ExternalTransferAmount = ExternalTransferAmount,
+    };
 }
 
 public class MonthSnapshot

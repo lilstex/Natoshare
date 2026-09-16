@@ -11,6 +11,7 @@ import type {
   LogExpenseResult,
   ResolveDeficitRequest,
 } from "@natoshare/shared-types";
+import { SEGMENT_COLORS } from "@/components/split-ring";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { apiFetch, ApiError } from "@/lib/api-client";
@@ -153,10 +154,11 @@ export function DashboardScreen() {
 
             <h2 className="mt-8 text-lg font-semibold text-text">Categories</h2>
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {balances.categories.map((category) => (
+              {balances.categories.map((category, index) => (
                 <CategoryCard
                   key={category.categoryId}
                   category={category}
+                  colorIndex={index}
                   currencyCode={accountLocale.currencyCode}
                   locale={accountLocale.locale}
                   isResolving={resolvingCategoryId === category.categoryId}
@@ -208,6 +210,7 @@ function TotalTile({ label, amount, currencyCode, locale }: { label: string; amo
 
 function CategoryCard({
   category,
+  colorIndex,
   currencyCode,
   locale,
   isResolving,
@@ -219,6 +222,7 @@ function CategoryCard({
   month,
 }: {
   category: CategoryBalance;
+  colorIndex: number;
   currencyCode: string;
   locale: string;
   isResolving: boolean;
@@ -229,8 +233,20 @@ function CategoryCard({
   year: number;
   month: number;
 }) {
-  const progress = category.funded > 0 ? Math.min(100, Math.round((category.spent / category.funded) * 100)) : 0;
   const statusLabel = category.deficit > 0 ? "InDeficit" : category.pace.status;
+
+  // Pace bar: track fills spent ÷ funded, clamped at 100% (a small chevron shows
+  // when the real number is over that), tinted by status, with a marker showing
+  // where "today" sits across the month.
+  const rawPercent = category.funded > 0 ? (category.spent / category.funded) * 100 : 0;
+  const fillPercent = Math.min(100, Math.round(rawPercent));
+  const isOverflowing = rawPercent > 100;
+  const fillColor =
+    statusLabel === "InDeficit" ? "bg-danger" : statusLabel === "OverPace" ? "bg-warning" : SEGMENT_COLORS[colorIndex % SEGMENT_COLORS.length];
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const todayDayOfMonth = new Date().getDate();
+  const todayMarkerPercent = Math.min(100, Math.round((todayDayOfMonth / daysInMonth) * 100));
 
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
@@ -248,14 +264,13 @@ function CategoryCard({
       </p>
       <p className="text-xs text-muted">{category.deficit > 0 ? "needs cover" : "available"}</p>
 
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
-        <div
-          className={`h-full rounded-full ${category.deficit > 0 ? "bg-danger" : "bg-primary"}`}
-          style={{ width: `${progress}%` }}
-        />
+      <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
+        <div className="h-full rounded-full" style={{ width: `${fillPercent}%`, backgroundColor: fillColor }} />
+        <div className="absolute inset-y-0 w-0.5 bg-text/50" style={{ left: `${todayMarkerPercent}%` }} title="Today" />
       </div>
       <p className="mt-1 text-[11px] text-muted">
         {formatMoney(category.spent, currencyCode, locale)} spent of {formatMoney(category.funded, currencyCode, locale)}
+        {isOverflowing ? " ▸" : ""}
       </p>
 
       {category.deficit > 0 && !isResolving && (
@@ -487,6 +502,13 @@ function LogExpenseForm({
   const [deficitNotice, setDeficitNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const selectedCategory = categories.find((c) => c.categoryId === categoryId);
+  const enteredAmount = Number(amount) || 0;
+  // A heads up before they even submit, so someone can back out or adjust the
+  // amount instead of only finding out after the fact.
+  const willGoOverBudget =
+    source === "Category" && selectedCategory !== undefined && enteredAmount > 0 && enteredAmount > selectedCategory.available;
+
   async function handleSubmit() {
     if (!amount || Number(amount) <= 0 || !description.trim()) {
       setError("Enter an amount and a description.");
@@ -568,6 +590,12 @@ function LogExpenseForm({
           className="h-10 rounded-lg border border-border-strong bg-surface px-3 text-sm outline-none focus:border-primary"
         />
       </div>
+      {willGoOverBudget && selectedCategory && (
+        <p className="mt-2 rounded-lg bg-warning-tint px-3 py-2 text-sm text-warning">
+          This is {formatMoney(enteredAmount - selectedCategory.available, currencyCode, locale)} more than {selectedCategory.name} has
+          available, it will go into deficit.
+        </p>
+      )}
       {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       {deficitNotice && <p className="mt-2 text-sm text-warning">{deficitNotice}</p>}
       <div className="mt-3 flex justify-end gap-2">

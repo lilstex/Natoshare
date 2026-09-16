@@ -5,13 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Budgeting;
 using Natoshare.Application.Common;
+using Natoshare.Application.Insights;
 using Natoshare.Application.Ledger;
 using Natoshare.Application.Me;
+using Natoshare.Application.Notifications;
 using Natoshare.Domain.Identity;
 using Natoshare.Infrastructure.Audit;
 using Natoshare.Infrastructure.Budgeting;
 using Natoshare.Infrastructure.Identity;
+using Natoshare.Infrastructure.Insights;
 using Natoshare.Infrastructure.Ledger;
+using Natoshare.Infrastructure.Notifications;
 using Natoshare.Infrastructure.Persistence;
 using Natoshare.Infrastructure.Time;
 
@@ -90,6 +94,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IDeficitService, DeficitService>();
         services.AddScoped<IBalanceService, BalanceService>();
         services.AddScoped<ILedgerReadService, LedgerReadService>();
+
+        // Pacing, alerts and notifications.
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IAlertEvaluationService, AlertEvaluationService>();
+        services.AddScoped<IInsightsService, InsightsService>();
 
         return services;
     }

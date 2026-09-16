@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Natoshare.Application.Common;
 using Natoshare.Application.Ledger;
-using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Ledger;
 using Natoshare.Infrastructure.Persistence;
 
@@ -35,15 +34,7 @@ public class BalanceService : IBalanceService
         var categories = new List<CategoryBalanceDto>();
         foreach (var c in snapshot.Categories)
         {
-            var categoryMonth = new CategoryMonth
-            {
-                AllocatedAmount = c.Allocated,
-                CarriedInSavings = c.CarriedInSavings,
-                CarriedInDeficit = c.CarriedInDeficit,
-                SpentAmount = c.Spent,
-                CoveredAmount = c.Covered,
-                ExternalTransferAmount = c.ExternalTransferAmount,
-            };
+            var categoryMonth = c.ToCategoryMonth();
 
             var savingsBalance = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.CategorySavings(c.CategoryId), cancellationToken);
             var deployedBalance = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.External(c.CategoryId), cancellationToken);

@@ -276,3 +276,85 @@ export type BalancesResult = {
     savedToDate: MoneyAmount;
   };
 };
+
+// --- Notifications & alerts (Phase 4) -----------------------
+
+// The full vocabulary the backend knows about. Only the first four are ever actually
+// produced right now, the rest belong to features that ship in later phases.
+export type NotificationKind =
+  | "OverPaceCategory"
+  | "OverspendCategory"
+  | "CategoryInDeficit"
+  | "SafeToSpendLow"
+  | "MonthCloseReminder"
+  | "FixedAccountUnconfirmed"
+  | "CarriedDeficitApplied"
+  | "MonthEndSummary"
+  | "DebtDueSoon"
+  | "DebtOverdue"
+  | "LoanReturnDueSoon"
+  | "LoanOverdue"
+  | "PromiseReminder"
+  | "RecurringItemDue";
+
+export type NotificationSeverity = "Info" | "Warning" | "Critical";
+
+export type Notification = {
+  id: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  severity: NotificationSeverity;
+  relatedEntityType: string | null;
+  relatedEntityId: string | null;
+  isRead: boolean;
+  readAt: string | null;
+  createdAt: string;
+};
+
+// Only these four kinds can actually be adjusted right now, the rest have no working
+// alert behind them yet.
+export type AdjustableAlertKind = "OverPaceCategory" | "OverspendCategory" | "CategoryInDeficit" | "SafeToSpendLow";
+
+export type AlertPreference = {
+  kind: AdjustableAlertKind;
+  enabled: boolean;
+  thresholdPercent: number | null;
+  leadDays: number | null;
+};
+
+export type UpdateAlertPreferenceInput = {
+  kind: AdjustableAlertKind;
+  enabled: boolean;
+  thresholdPercent: number | null;
+  leadDays: number | null;
+};
+
+// --- Insights (Phase 4) -----------------------
+
+export type TopCategory = {
+  categoryId: string;
+  name: string;
+  spent: MoneyAmount;
+};
+
+export type SpendingTrend = {
+  direction: "Up" | "Down" | "Flat";
+  percentChange: number | null;
+};
+
+export type SpendingSummary = {
+  plainEnglish: string;
+  year: number;
+  month: number;
+  topCategories: TopCategory[];
+  trend: SpendingTrend;
+};
+
+export type PacingInsight = {
+  categoryId: string;
+  name: string;
+  projected: MoneyAmount;
+  status: PacingStatus;
+  safeToSpendDaily: MoneyAmount;
+};

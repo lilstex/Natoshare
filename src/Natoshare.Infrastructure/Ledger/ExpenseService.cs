@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Natoshare.Application.Common;
 using Natoshare.Application.Ledger;
+using Natoshare.Application.Notifications;
 using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Common;
 using Natoshare.Domain.Ledger;
@@ -18,13 +19,20 @@ public class ExpenseService : IExpenseService
     private readonly IClock _clock;
     private readonly ILedgerService _ledgerService;
     private readonly IBudgetMonthService _budgetMonthService;
+    private readonly IAlertEvaluationService _alertEvaluationService;
 
-    public ExpenseService(NatoshareDbContext dbContext, IClock clock, ILedgerService ledgerService, IBudgetMonthService budgetMonthService)
+    public ExpenseService(
+        NatoshareDbContext dbContext,
+        IClock clock,
+        ILedgerService ledgerService,
+        IBudgetMonthService budgetMonthService,
+        IAlertEvaluationService alertEvaluationService)
     {
         _dbContext = dbContext;
         _clock = clock;
         _ledgerService = ledgerService;
         _budgetMonthService = budgetMonthService;
+        _alertEvaluationService = alertEvaluationService;
     }
 
     public async Task<IReadOnlyList<ExpenseDto>> ListAsync(
@@ -129,6 +137,11 @@ public class ExpenseService : IExpenseService
         await _ledgerService.PostAsync(
             userId, budgetMonthId, account, LedgerEntryType.Expense, amount, LedgerDirection.Debit, SourceTxnType.Expense, expense.Id, request.Description, cancellationToken);
 
+        if (source == ExpenseSource.Category)
+        {
+            await _alertEvaluationService.EvaluateCategoryAsync(userId, budgetMonthId, request.CategoryId!.Value, cancellationToken);
+        }
+
         return await BuildResultAsync(expense, categoryMonth, tags, user.TimeZoneId, cancellationToken);
     }
 
@@ -194,6 +207,11 @@ public class ExpenseService : IExpenseService
         var account = expense.Source == ExpenseSource.Category ? AccountRef.Category(expense.CategoryId!.Value) : AccountRef.FlexiblePool();
         await _ledgerService.PostAsync(
             userId, expense.BudgetMonthId, account, LedgerEntryType.Expense, newAmount, LedgerDirection.Debit, SourceTxnType.Expense, expense.Id, expense.Description, cancellationToken);
+
+        if (expense.Source == ExpenseSource.Category)
+        {
+            await _alertEvaluationService.EvaluateCategoryAsync(userId, expense.BudgetMonthId, expense.CategoryId!.Value, cancellationToken);
+        }
 
         var user = await _dbContext.Users.FirstAsync(u => u.Id == userId, cancellationToken);
         var resultTags = await TagsForExpenseAsync(expense, cancellationToken);

@@ -6,11 +6,14 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Natoshare.Api.Auth;
 using Natoshare.Api.Filters;
+using Natoshare.Api.Jobs;
 using Natoshare.Api.Middleware;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Common;
+using Natoshare.Application.Maintenance;
 using Natoshare.Application.Months;
 using Natoshare.Application.Notifications;
+using Natoshare.Application.Planning;
 using Natoshare.Infrastructure;
 using Natoshare.Infrastructure.Persistence;
 using Natoshare.Infrastructure.Seed;
@@ -28,6 +31,10 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .Enrich.FromLogContext()
     .CreateBootstrapLogger();
+
+// QuestPDF needs a license picked once at startup, Community is free for a company
+// under a small revenue threshold, which is exactly this project's situation.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 try
 {
@@ -131,6 +138,10 @@ try
     });
     builder.Services.AddHangfireServer();
 
+    // One place every recurring job's failure gets logged loudly, instead of only
+    // ever showing up if someone happens to open the Hangfire dashboard.
+    GlobalJobFilters.Filters.Add(new HangfireFailureAlertFilter());
+
     var app = builder.Build();
 
     // This has to sit before everything else, so it can catch errors thrown by
@@ -206,6 +217,40 @@ try
         "month-close-reminders",
         service => service.EvaluateCloseRemindersAsync(CancellationToken.None),
         Cron.Daily());
+
+    // Once a day, checks every debt and loan for a due or expected-return date
+    // coming up or already passed, and every open promise the Flexible Pool can now
+    // actually afford to redeem.
+    RecurringJob.AddOrUpdate<IAlertEvaluationService>(
+        "evaluate-obligations",
+        service => service.EvaluateObligationsAsync(CancellationToken.None),
+        Cron.Daily());
+
+    // Once an hour, posts or reminds for every recurring item that has come due.
+    RecurringJob.AddOrUpdate<IRecurringItemMaterializer>(
+        "materialise-recurring-items",
+        service => service.MaterializeDueItemsAsync(CancellationToken.None),
+        Cron.Hourly());
+
+    // Once a day, pauses recurring items for anyone whose trial has lapsed.
+    RecurringJob.AddOrUpdate<IMaintenanceJobs>(
+        "expire-trials-and-subscriptions",
+        service => service.ExpireTrialsAndSubscriptionsAsync(CancellationToken.None),
+        Cron.Daily(0, 30));
+
+    // Once a day, hard-deletes any account whose PendingDeletion grace period is over.
+    RecurringJob.AddOrUpdate<IMaintenanceJobs>(
+        "purge-pending-deletions",
+        service => service.PurgePendingDeletionsAsync(CancellationToken.None),
+        Cron.Daily(2, 0));
+
+    // Once a night, re-checks that every settled category's ledger account still
+    // nets to exactly zero, logging an error (see HangfireFailureAlertFilter and the
+    // job's own logging) if anything has drifted.
+    RecurringJob.AddOrUpdate<IMaintenanceJobs>(
+        "ledger-integrity-check",
+        service => service.RunLedgerIntegrityCheckAsync(CancellationToken.None),
+        Cron.Daily(3, 0));
 
     app.Run();
 }

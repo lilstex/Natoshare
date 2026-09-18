@@ -16,13 +16,17 @@ public class BalanceService : IBalanceService
     private readonly IClock _clock;
     private readonly ILedgerService _ledgerService;
     private readonly IBudgetMonthService _budgetMonthService;
+    private readonly IEntitlementService _entitlementService;
 
-    public BalanceService(NatoshareDbContext dbContext, IClock clock, ILedgerService ledgerService, IBudgetMonthService budgetMonthService)
+    public BalanceService(
+        NatoshareDbContext dbContext, IClock clock, ILedgerService ledgerService, IBudgetMonthService budgetMonthService,
+        IEntitlementService entitlementService)
     {
         _dbContext = dbContext;
         _clock = clock;
         _ledgerService = ledgerService;
         _budgetMonthService = budgetMonthService;
+        _entitlementService = entitlementService;
     }
 
     public async Task<BalancesResult> GetCurrentAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -30,6 +34,7 @@ public class BalanceService : IBalanceService
         var user = await _dbContext.Users.FirstAsync(u => u.Id == userId, cancellationToken);
         var today = UserTime.TodayFor(user.TimeZoneId, _clock.UtcNow);
         var snapshot = await _budgetMonthService.GetSnapshotAsync(userId, today.Year, today.Month, cancellationToken);
+        var lockedCategoryIds = await _entitlementService.GetLockedCategoryIdsAsync(userId, cancellationToken);
 
         var categories = new List<CategoryBalanceDto>();
         foreach (var c in snapshot.Categories)
@@ -55,7 +60,8 @@ public class BalanceService : IBalanceService
                 savingsBalance.Amount,
                 deployedBalance.Amount,
                 new PaceDto(pace.Projected, pace.Status),
-                new SafeToSpendDto(pace.SafeToSpendDaily, pace.SafeToSpendDaily * 7)));
+                new SafeToSpendDto(pace.SafeToSpendDaily, pace.SafeToSpendDaily * 7),
+                lockedCategoryIds.Contains(c.CategoryId)));
         }
 
         var poolBalance = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.FlexiblePool(), cancellationToken);

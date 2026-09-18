@@ -23,5 +23,13 @@ public static class DefaultAlertPreferences
         new(NotificationKind.FixedAccountUnconfirmed, ThresholdPercent: null, LeadDays: null),
         new(NotificationKind.CarriedDeficitApplied, ThresholdPercent: null, LeadDays: null),
         new(NotificationKind.MonthEndSummary, ThresholdPercent: null, LeadDays: null),
+
+        // 3 means "warn 3 days before the due or expected-return date".
+        new(NotificationKind.DebtDueSoon, ThresholdPercent: null, LeadDays: 3),
+        new(NotificationKind.DebtOverdue, ThresholdPercent: null, LeadDays: null),
+        new(NotificationKind.LoanReturnDueSoon, ThresholdPercent: null, LeadDays: 3),
+        new(NotificationKind.LoanOverdue, ThresholdPercent: null, LeadDays: null),
+        new(NotificationKind.PromiseReminder, ThresholdPercent: null, LeadDays: null),
+        new(NotificationKind.RecurringItemDue, ThresholdPercent: null, LeadDays: null),
     ];
 }

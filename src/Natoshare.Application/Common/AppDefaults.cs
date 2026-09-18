@@ -9,4 +9,8 @@ public class AppDefaults
     public string DefaultCurrencyCode { get; set; } = "NGN";
     public string DefaultCurrencySymbol { get; set; } = "₦";
     public int TrialDays { get; set; } = 30;
+
+    // How long a PendingDeletion account sits before PurgePendingDeletions removes
+    // it for good, giving someone a window to change their mind.
+    public int PendingDeletionGraceDays { get; set; } = 7;
 }

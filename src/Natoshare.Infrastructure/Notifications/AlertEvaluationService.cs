@@ -5,7 +5,9 @@ using Natoshare.Application.Notifications;
 using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Common;
 using Natoshare.Domain.Identity;
+using Natoshare.Domain.Ledger;
 using Natoshare.Domain.Notifications;
+using Natoshare.Domain.PeopleAndMoney;
 using Natoshare.Infrastructure.Persistence;
 
 namespace Natoshare.Infrastructure.Notifications;
@@ -17,11 +19,13 @@ public class AlertEvaluationService : IAlertEvaluationService
 {
     private readonly NatoshareDbContext _dbContext;
     private readonly IClock _clock;
+    private readonly ILedgerService _ledgerService;
 
-    public AlertEvaluationService(NatoshareDbContext dbContext, IClock clock)
+    public AlertEvaluationService(NatoshareDbContext dbContext, IClock clock, ILedgerService ledgerService)
     {
         _dbContext = dbContext;
         _clock = clock;
+        _ledgerService = ledgerService;
     }
 
     public async Task EvaluateCategoryAsync(Guid userId, Guid budgetMonthId, Guid categoryId, CancellationToken cancellationToken = default)
@@ -224,6 +228,113 @@ public class AlertEvaluationService : IAlertEvaluationService
             categoryMonth.Id, cancellationToken);
     }
 
+    // Run once a day by a recurring job: debts and loans coming due or already
+    // overdue, and promises the user can now afford to redeem straight from the
+    // Flexible Pool.
+    public async Task EvaluateObligationsAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await _dbContext.Users.Select(u => new { u.Id, u.TimeZoneId }).ToListAsync(cancellationToken);
+
+        foreach (var userRow in users)
+        {
+            var today = UserTime.TodayFor(userRow.TimeZoneId, _clock.UtcNow);
+            var user = await _dbContext.Users.FirstAsync(u => u.Id == userRow.Id, cancellationToken);
+            var preferences = await _dbContext.AlertPreferences.Where(p => p.UserId == userRow.Id).ToListAsync(cancellationToken);
+
+            var debts = await _dbContext.DebtsIn
+                .Where(d => d.UserId == userRow.Id && d.Status != DebtInStatus.Repaid && d.DueOn != null)
+                .ToListAsync(cancellationToken);
+            foreach (var debt in debts)
+            {
+                await EvaluateDueDateAsync(
+                    user, debt.Id, "DebtIn", debt.DueOn!.Value, today, preferences,
+                    NotificationKind.DebtDueSoon, NotificationKind.DebtOverdue,
+                    $"{debt.LenderName} needs to be paid back soon", $"{debt.LenderName} is now overdue to be paid back", cancellationToken);
+            }
+
+            var loans = await _dbContext.LoansOut
+                .Where(l => l.UserId == userRow.Id && l.Status != LoanOutStatus.Repaid && l.Status != LoanOutStatus.WrittenOff && l.ExpectedReturnOn != null)
+                .ToListAsync(cancellationToken);
+            foreach (var loan in loans)
+            {
+                await EvaluateDueDateAsync(
+                    user, loan.Id, "LoanOut", loan.ExpectedReturnOn!.Value, today, preferences,
+                    NotificationKind.LoanReturnDueSoon, NotificationKind.LoanOverdue,
+                    $"{loan.BorrowerName} was expected to return this soon", $"{loan.BorrowerName} is now overdue to return this", cancellationToken);
+            }
+
+            if (!IsDisabled(preferences, NotificationKind.PromiseReminder))
+            {
+                var pool = await _ledgerService.GetAccountBalanceAsync(userRow.Id, AccountRef.FlexiblePool(), cancellationToken);
+                var openPromises = await _dbContext.Promises
+                    .Include(p => p.Redemptions)
+                    .Where(p => p.UserId == userRow.Id && (p.Status == PromiseStatus.Open || p.Status == PromiseStatus.PartiallyRedeemed))
+                    .ToListAsync(cancellationToken);
+
+                foreach (var promise in openPromises)
+                {
+                    var outstanding = Math.Max(0m, promise.Amount.Amount - promise.Redemptions.Sum(r => r.Amount.Amount));
+                    if (pool.Amount < outstanding)
+                    {
+                        continue;
+                    }
+
+                    if (await AlreadyFiredTodayAsync(userRow.Id, NotificationKind.PromiseReminder, promise.Id, today, userRow.TimeZoneId, cancellationToken))
+                    {
+                        continue;
+                    }
+
+                    await CreateAsync(
+                        userRow.Id, NotificationKind.PromiseReminder, NotificationSeverity.Info,
+                        $"You can now redeem your promise to {promise.PersonName}",
+                        $"The Flexible Pool now holds enough to redeem the {FormatAmount(user, new Money(outstanding))} still owed to {promise.PersonName}.",
+                        promise.Id, cancellationToken, relatedEntityType: "Promise");
+                }
+            }
+        }
+    }
+
+    private async Task EvaluateDueDateAsync(
+        User user, Guid entityId, string entityType, DateOnly dueDate, DateOnly today, List<AlertPreference> preferences,
+        NotificationKind dueSoonKind, NotificationKind overdueKind, string dueSoonTitle, string overdueTitle, CancellationToken cancellationToken)
+    {
+        var daysUntilDue = dueDate.DayNumber - today.DayNumber;
+
+        if (daysUntilDue < 0)
+        {
+            if (IsDisabled(preferences, overdueKind))
+            {
+                return;
+            }
+
+            if (await AlreadyFiredTodayAsync(user.Id, overdueKind, entityId, today, user.TimeZoneId, cancellationToken))
+            {
+                return;
+            }
+
+            await CreateAsync(user.Id, overdueKind, NotificationSeverity.Critical, overdueTitle, overdueTitle, entityId, cancellationToken, entityType);
+            return;
+        }
+
+        if (IsDisabled(preferences, dueSoonKind))
+        {
+            return;
+        }
+
+        var leadDays = preferences.FirstOrDefault(p => p.Kind == dueSoonKind)?.LeadDays ?? 3;
+        if (daysUntilDue > leadDays)
+        {
+            return;
+        }
+
+        if (await AlreadyFiredTodayAsync(user.Id, dueSoonKind, entityId, today, user.TimeZoneId, cancellationToken))
+        {
+            return;
+        }
+
+        await CreateAsync(user.Id, dueSoonKind, NotificationSeverity.Warning, dueSoonTitle, dueSoonTitle, entityId, cancellationToken, entityType);
+    }
+
     private static bool IsDisabled(List<AlertPreference> preferences, NotificationKind kind) =>
         preferences.FirstOrDefault(p => p.Kind == kind) is { Enabled: false };
 
@@ -264,7 +375,8 @@ public class AlertEvaluationService : IAlertEvaluationService
     }
 
     private async Task CreateAsync(
-        Guid userId, NotificationKind kind, NotificationSeverity severity, string title, string body, Guid categoryMonthId, CancellationToken cancellationToken)
+        Guid userId, NotificationKind kind, NotificationSeverity severity, string title, string body, Guid relatedEntityId,
+        CancellationToken cancellationToken, string relatedEntityType = "CategoryMonth")
     {
         _dbContext.Notifications.Add(new Notification
         {
@@ -274,8 +386,8 @@ public class AlertEvaluationService : IAlertEvaluationService
             Title = title,
             Body = body,
             Severity = severity,
-            RelatedEntityType = "CategoryMonth",
-            RelatedEntityId = categoryMonthId.ToString(),
+            RelatedEntityType = relatedEntityType,
+            RelatedEntityId = relatedEntityId.ToString(),
             CreatedAt = _clock.UtcNow,
         });
 

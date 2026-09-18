@@ -205,7 +205,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("EntityType", "EntityId");
 
-                    b.ToTable("AuditEvents", (string)null);
+                    b.ToTable("AuditEvents");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.AllocationConfigVersion", b =>
@@ -237,7 +237,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "EffectiveFromMonth");
 
-                    b.ToTable("AllocationConfigVersions", (string)null);
+                    b.ToTable("AllocationConfigVersions");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.BudgetMonth", b =>
@@ -280,7 +280,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Year", "Month")
                         .IsUnique();
 
-                    b.ToTable("BudgetMonths", (string)null);
+                    b.ToTable("BudgetMonths");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.BudgetTemplate", b =>
@@ -304,7 +304,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BudgetTemplates", (string)null);
+                    b.ToTable("BudgetTemplates");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.BudgetTemplateItem", b =>
@@ -336,7 +336,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("BudgetTemplateId");
 
-                    b.ToTable("BudgetTemplateItems", (string)null);
+                    b.ToTable("BudgetTemplateItems");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.Category", b =>
@@ -382,7 +382,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Name")
                         .IsUnique();
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.CategoryAllocation", b =>
@@ -406,7 +406,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("CategoryAllocations", (string)null);
+                    b.ToTable("CategoryAllocations");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Budgeting.CategoryMonth", b =>
@@ -468,7 +468,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("BudgetMonthId", "CategoryId")
                         .IsUnique();
 
-                    b.ToTable("CategoryMonths", (string)null);
+                    b.ToTable("CategoryMonths");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Common.IdempotencyRecord", b =>
@@ -500,7 +500,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Key")
                         .IsUnique();
 
-                    b.ToTable("IdempotencyRecords", (string)null);
+                    b.ToTable("IdempotencyRecords");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Identity.DataExportRequest", b =>
@@ -531,7 +531,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DataExportRequests", (string)null);
+                    b.ToTable("DataExportRequests");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Identity.PasswordResetToken", b =>
@@ -563,7 +563,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PasswordResetTokens", (string)null);
+                    b.ToTable("PasswordResetTokens");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Identity.RefreshToken", b =>
@@ -604,7 +604,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Identity.User", b =>
@@ -672,6 +672,9 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("PendingDeletionRequestedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text");
@@ -773,7 +776,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "Account", "AccountCategoryId");
 
-                    b.ToTable("LedgerEntries", (string)null);
+                    b.ToTable("LedgerEntries");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Notifications.AlertPreference", b =>
@@ -804,7 +807,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Kind")
                         .IsUnique();
 
-                    b.ToTable("AlertPreferences", (string)null);
+                    b.ToTable("AlertPreferences");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Notifications.Notification", b =>
@@ -859,7 +862,448 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "Kind", "RelatedEntityId", "CreatedAt");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.DebtIn", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateOnly>("BorrowedOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("DueOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("LenderName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Status");
+
+                    b.ToTable("DebtsIn");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.DebtRepayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DebtInId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("LinkedSourceCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LinkedSourceKind")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly>("PaidOn")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DebtInId");
+
+                    b.ToTable("DebtRepayments");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.InvestmentLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("BudgetMonthId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("InvestedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetMonthId");
+
+                    b.HasIndex("UserId", "InvestedOn");
+
+                    b.ToTable("InvestmentLogs");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.LoanOut", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("BorrowerName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("ExpectedReturnOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("LentOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("LinkedSourceCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LinkedSourceKind")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Status");
+
+                    b.ToTable("LoansOut");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.LoanRepayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LinkedDestinationCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LinkedDestinationKind")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("LoanOutId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly>("ReceivedOn")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoanOutId");
+
+                    b.ToTable("LoanRepayments");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.Promise", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("MadeOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PersonName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Status");
+
+                    b.ToTable("Promises");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.PromiseRedemption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("PromiseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("RedeemedOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("SourceAccountCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceAccountKind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PromiseId");
+
+                    b.ToTable("PromiseRedemptions");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.Planning.RecurringItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("AnchorDay")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Cadence")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("IncomeType")
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateOnly?>("LastPostedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateOnly>("NextRunOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsActive", "NextRunOn");
+
+                    b.ToTable("RecurringItems");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.Subscriptions.FeatureFlag", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("FeatureFlags");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.Subscriptions.PlanConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("DeficitCoverFromSavingsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ExportEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("HistoryWindowDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MaxCategories")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<bool>("RecurringItemsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SinkingFundEnabled")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Plan")
+                        .IsUnique();
+
+                    b.ToTable("PlanConfigs");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.Subscriptions.SubscriptionRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ActivatedByAdminUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BillingCycle")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTimeOffset?>("PeriodEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Reference")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Status");
+
+                    b.ToTable("SubscriptionRecords");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.DeficitResolution", b =>
@@ -908,7 +1352,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("BudgetMonthId", "CategoryId");
 
-                    b.ToTable("DeficitResolutions", (string)null);
+                    b.ToTable("DeficitResolutions");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Expense", b =>
@@ -962,7 +1406,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "OccurredOn");
 
-                    b.ToTable("Expenses", (string)null);
+                    b.ToTable("Expenses");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.ExpenseTag", b =>
@@ -977,7 +1421,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("ExpenseTags", (string)null);
+                    b.ToTable("ExpenseTags");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Income", b =>
@@ -1022,7 +1466,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "OccurredOn");
 
-                    b.ToTable("Incomes", (string)null);
+                    b.ToTable("Incomes");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.IncomeSplit", b =>
@@ -1046,7 +1490,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("IncomeId");
 
-                    b.ToTable("IncomeSplits", (string)null);
+                    b.ToTable("IncomeSplits");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Reallocation", b =>
@@ -1101,7 +1545,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "OccurredOn");
 
-                    b.ToTable("Reallocations", (string)null);
+                    b.ToTable("Reallocations");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Tag", b =>
@@ -1123,7 +1567,7 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Name")
                         .IsUnique();
 
-                    b.ToTable("Tags", (string)null);
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -1204,6 +1648,33 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.DebtRepayment", b =>
+                {
+                    b.HasOne("Natoshare.Domain.PeopleAndMoney.DebtIn", null)
+                        .WithMany("Repayments")
+                        .HasForeignKey("DebtInId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.LoanRepayment", b =>
+                {
+                    b.HasOne("Natoshare.Domain.PeopleAndMoney.LoanOut", null)
+                        .WithMany("Repayments")
+                        .HasForeignKey("LoanOutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.PromiseRedemption", b =>
+                {
+                    b.HasOne("Natoshare.Domain.PeopleAndMoney.Promise", null)
+                        .WithMany("Redemptions")
+                        .HasForeignKey("PromiseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Natoshare.Domain.Transactions.ExpenseTag", b =>
                 {
                     b.HasOne("Natoshare.Domain.Transactions.Expense", null)
@@ -1235,6 +1706,21 @@ namespace Natoshare.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Natoshare.Domain.Budgeting.BudgetTemplate", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.DebtIn", b =>
+                {
+                    b.Navigation("Repayments");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.LoanOut", b =>
+                {
+                    b.Navigation("Repayments");
+                });
+
+            modelBuilder.Entity("Natoshare.Domain.PeopleAndMoney.Promise", b =>
+                {
+                    b.Navigation("Redemptions");
                 });
 
             modelBuilder.Entity("Natoshare.Domain.Transactions.Expense", b =>

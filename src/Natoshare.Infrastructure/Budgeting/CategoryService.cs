@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Natoshare.Application.Budgeting;
+using Natoshare.Application.Common;
 using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Common;
 using Natoshare.Infrastructure.Persistence;
@@ -11,11 +12,13 @@ public class CategoryService : ICategoryService
 {
     private readonly NatoshareDbContext _dbContext;
     private readonly AllocationService _allocationService;
+    private readonly IEntitlementService _entitlementService;
 
-    public CategoryService(NatoshareDbContext dbContext, AllocationService allocationService)
+    public CategoryService(NatoshareDbContext dbContext, AllocationService allocationService, IEntitlementService entitlementService)
     {
         _dbContext = dbContext;
         _allocationService = allocationService;
+        _entitlementService = entitlementService;
     }
 
     public async Task<IReadOnlyList<CategoryDto>> GetCategoriesAsync(Guid userId, bool includeArchived, CancellationToken cancellationToken = default)
@@ -28,15 +31,23 @@ public class CategoryService : ICategoryService
 
         var categories = await query.OrderBy(c => c.SortOrder).ToListAsync(cancellationToken);
         var percentages = await CurrentPercentagesAsync(userId, cancellationToken);
+        var lockedCategoryIds = await _entitlementService.GetLockedCategoryIdsAsync(userId, cancellationToken);
 
-        return categories.Select(c => ToDto(c, PercentageOrNull(percentages, c.Id))).ToList();
+        return categories.Select(c => ToDto(c, PercentageOrNull(percentages, c.Id), lockedCategoryIds.Contains(c.Id))).ToList();
     }
 
     public async Task<CategoryDto> CreateCategoryAsync(Guid userId, CreateCategoryRequest request, CancellationToken cancellationToken = default)
     {
-        // Plan limits (how many categories Free vs Pro can have) are stubbed to
-        // "unlimited" until Phase 9 builds real plans, so there is nothing to check
-        // here yet, this is where that check will go.
+        var entitlements = await _entitlementService.ResolveAsync(userId, cancellationToken);
+        if (entitlements.MaxCategories is not null)
+        {
+            var activeCount = await _dbContext.Categories.CountAsync(c => c.UserId == userId && !c.IsArchived, cancellationToken);
+            if (activeCount >= entitlements.MaxCategories.Value)
+            {
+                throw new UpgradeRequiredException($"Free accounts can have up to {entitlements.MaxCategories.Value} categories, upgrade to Pro for unlimited categories.");
+            }
+        }
+
         await EnsureNameIsFreeAsync(userId, request.Name, existingCategoryId: null, cancellationToken);
 
         var maxSortOrder = await _dbContext.Categories
@@ -59,7 +70,9 @@ public class CategoryService : ICategoryService
         _dbContext.Categories.Add(category);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return ToDto(category, currentPercentage: null);
+        // Just checked against the limit above in this same request, so this one
+        // can never come back locked.
+        return ToDto(category, currentPercentage: null, isLocked: false);
     }
 
     public async Task<CategoryDto> UpdateCategoryAsync(Guid userId, Guid categoryId, UpdateCategoryRequest request, CancellationToken cancellationToken = default)
@@ -85,7 +98,8 @@ public class CategoryService : ICategoryService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         var percentages = await CurrentPercentagesAsync(userId, cancellationToken);
-        return ToDto(category, PercentageOrNull(percentages, category.Id));
+        var isLocked = (await _entitlementService.GetLockedCategoryIdsAsync(userId, cancellationToken)).Contains(category.Id);
+        return ToDto(category, PercentageOrNull(percentages, category.Id), isLocked);
     }
 
     public async Task<CategoryDto> AddSubCategoryAsync(Guid userId, Guid categoryId, AddSubCategoryRequest request, CancellationToken cancellationToken = default)
@@ -100,7 +114,8 @@ public class CategoryService : ICategoryService
         }
 
         var percentages = await CurrentPercentagesAsync(userId, cancellationToken);
-        return ToDto(category, PercentageOrNull(percentages, category.Id));
+        var isLocked = (await _entitlementService.GetLockedCategoryIdsAsync(userId, cancellationToken)).Contains(category.Id);
+        return ToDto(category, PercentageOrNull(percentages, category.Id), isLocked);
     }
 
     public async Task<CategoryDto> RemoveSubCategoryAsync(Guid userId, Guid categoryId, string name, CancellationToken cancellationToken = default)
@@ -110,7 +125,8 @@ public class CategoryService : ICategoryService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         var percentages = await CurrentPercentagesAsync(userId, cancellationToken);
-        return ToDto(category, PercentageOrNull(percentages, category.Id));
+        var isLocked = (await _entitlementService.GetLockedCategoryIdsAsync(userId, cancellationToken)).Contains(category.Id);
+        return ToDto(category, PercentageOrNull(percentages, category.Id), isLocked);
     }
 
     public async Task<AllocationVersionResult> ArchiveCategoryAsync(
@@ -188,7 +204,7 @@ public class CategoryService : ICategoryService
     private static decimal? PercentageOrNull(Dictionary<Guid, decimal> percentages, Guid categoryId) =>
         percentages.TryGetValue(categoryId, out var percentage) ? percentage : null;
 
-    private static CategoryDto ToDto(Category category, decimal? currentPercentage) => new(
+    private static CategoryDto ToDto(Category category, decimal? currentPercentage, bool isLocked) => new(
         category.Id,
         category.Name,
         category.Kind.ToString(),
@@ -196,5 +212,6 @@ public class CategoryService : ICategoryService
         category.SubCategories,
         category.SortOrder,
         category.IsArchived,
-        currentPercentage);
+        currentPercentage,
+        isLocked);
 }

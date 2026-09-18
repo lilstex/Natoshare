@@ -8,7 +8,8 @@ internal static class NotificationKindValidation
     // here, the rest belong to features that do not exist yet.
     public static bool IsAdjustableNow(string kind) =>
         kind is "OverPaceCategory" or "OverspendCategory" or "CategoryInDeficit" or "SafeToSpendLow"
-            or "MonthCloseReminder" or "FixedAccountUnconfirmed" or "CarriedDeficitApplied" or "MonthEndSummary";
+            or "MonthCloseReminder" or "FixedAccountUnconfirmed" or "CarriedDeficitApplied" or "MonthEndSummary"
+            or "DebtDueSoon" or "DebtOverdue" or "LoanReturnDueSoon" or "LoanOverdue" or "PromiseReminder" or "RecurringItemDue";
 }
 
 public class UpdateAlertPreferenceInputValidator : AbstractValidator<UpdateAlertPreferenceInput>

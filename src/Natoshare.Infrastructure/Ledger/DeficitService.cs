@@ -20,19 +20,22 @@ public class DeficitService : IDeficitService
     private readonly ILedgerService _ledgerService;
     private readonly IReallocationService _reallocationService;
     private readonly IAuditLogger _auditLogger;
+    private readonly IEntitlementService _entitlementService;
 
     public DeficitService(
         NatoshareDbContext dbContext,
         IClock clock,
         ILedgerService ledgerService,
         IReallocationService reallocationService,
-        IAuditLogger auditLogger)
+        IAuditLogger auditLogger,
+        IEntitlementService entitlementService)
     {
         _dbContext = dbContext;
         _clock = clock;
         _ledgerService = ledgerService;
         _reallocationService = reallocationService;
         _auditLogger = auditLogger;
+        _entitlementService = entitlementService;
     }
 
     public async Task<IReadOnlyList<DeficitListItemDto>> ListAsync(
@@ -53,6 +56,7 @@ public class DeficitService : IDeficitService
         }
 
         var categories = await _dbContext.Categories.Where(c => c.UserId == userId).ToDictionaryAsync(c => c.Id, cancellationToken);
+        var entitlements = await _entitlementService.ResolveAsync(userId, cancellationToken);
         var results = new List<DeficitListItemDto>();
 
         foreach (var categoryMonth in budgetMonth.CategoryMonths)
@@ -75,7 +79,7 @@ public class DeficitService : IDeficitService
             }
 
             categories.TryGetValue(categoryMonth.CategoryId, out var category);
-            var sources = await SuggestedSourcesAsync(userId, categoryMonth.CategoryId, categories, cancellationToken);
+            var sources = await SuggestedSourcesAsync(userId, categoryMonth.CategoryId, categories, entitlements.DeficitCoverFromSavings, cancellationToken);
 
             results.Add(new DeficitListItemDto(
                 categoryMonth.CategoryId, category?.Name ?? "(deleted category)", deficit.Amount, categoryMonth.CarriedInDeficit.Amount, sources));
@@ -108,6 +112,16 @@ public class DeficitService : IDeficitService
         }
 
         var method = Enum.Parse<DeficitResolutionMethod>(request.Method);
+        if (method is DeficitResolutionMethod.OwnSavings or DeficitResolutionMethod.OtherCategorySavings)
+        {
+            var entitlements = await _entitlementService.ResolveAsync(userId, cancellationToken);
+            if (!entitlements.DeficitCoverFromSavings)
+            {
+                throw new UpgradeRequiredException(
+                    "Covering a deficit from savings needs a Pro plan or an active trial, use the Flexible Pool or carry it to next month instead.");
+            }
+        }
+
         var (fromKind, fromCategoryId) = method switch
         {
             DeficitResolutionMethod.OwnSavings => ("CategorySavings", (Guid?)request.CategoryId),
@@ -181,22 +195,29 @@ public class DeficitService : IDeficitService
     }
 
     private async Task<List<SuggestedSourceDto>> SuggestedSourcesAsync(
-        Guid userId, Guid categoryId, Dictionary<Guid, Category> categories, CancellationToken cancellationToken)
+        Guid userId, Guid categoryId, Dictionary<Guid, Category> categories, bool deficitCoverFromSavingsEnabled, CancellationToken cancellationToken)
     {
         var sources = new List<SuggestedSourceDto>();
 
-        var ownSavings = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.CategorySavings(categoryId), cancellationToken);
-        if (ownSavings > Money.Zero)
+        // Free never suggests a savings source, even one with real money sitting in
+        // it, docs/00-plan.md section 5 only allows FlexiblePool or carrying the
+        // deficit forward on Free, offering a source that would just get rejected
+        // at resolve time would be a dishonest suggestion.
+        if (deficitCoverFromSavingsEnabled)
         {
-            sources.Add(new SuggestedSourceDto("OwnSavings", categoryId, ownSavings.Amount));
-        }
-
-        foreach (var other in categories.Values.Where(c => c.Id != categoryId && !c.IsArchived))
-        {
-            var otherSavings = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.CategorySavings(other.Id), cancellationToken);
-            if (otherSavings > Money.Zero)
+            var ownSavings = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.CategorySavings(categoryId), cancellationToken);
+            if (ownSavings > Money.Zero)
             {
-                sources.Add(new SuggestedSourceDto("OtherCategorySavings", other.Id, otherSavings.Amount));
+                sources.Add(new SuggestedSourceDto("OwnSavings", categoryId, ownSavings.Amount));
+            }
+
+            foreach (var other in categories.Values.Where(c => c.Id != categoryId && !c.IsArchived))
+            {
+                var otherSavings = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.CategorySavings(other.Id), cancellationToken);
+                if (otherSavings > Money.Zero)
+                {
+                    sources.Add(new SuggestedSourceDto("OtherCategorySavings", other.Id, otherSavings.Amount));
+                }
             }
         }
 

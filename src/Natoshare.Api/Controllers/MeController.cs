@@ -14,6 +14,7 @@ public class MeController : ApiControllerBase
 {
     private readonly IMeService _meService;
     private readonly ICurrentUser _currentUser;
+    private readonly IEntitlementService _entitlementService;
     private readonly IValidator<UpdateMeRequest> _updateMeValidator;
     private readonly IValidator<UpdateCurrencyRequest> _updateCurrencyValidator;
     private readonly IValidator<DeleteAccountRequest> _deleteAccountValidator;
@@ -21,15 +22,24 @@ public class MeController : ApiControllerBase
     public MeController(
         IMeService meService,
         ICurrentUser currentUser,
+        IEntitlementService entitlementService,
         IValidator<UpdateMeRequest> updateMeValidator,
         IValidator<UpdateCurrencyRequest> updateCurrencyValidator,
         IValidator<DeleteAccountRequest> deleteAccountValidator)
     {
         _meService = meService;
         _currentUser = currentUser;
+        _entitlementService = entitlementService;
         _updateMeValidator = updateMeValidator;
         _updateCurrencyValidator = updateCurrencyValidator;
         _deleteAccountValidator = deleteAccountValidator;
+    }
+
+    [HttpGet("entitlements")]
+    public async Task<ActionResult<PlanEntitlements>> GetEntitlements(CancellationToken cancellationToken)
+    {
+        var result = await _entitlementService.ResolveAsync(_currentUser.UserId, cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet]

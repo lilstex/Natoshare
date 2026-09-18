@@ -9,16 +9,27 @@ using Natoshare.Application.Insights;
 using Natoshare.Application.Ledger;
 using Natoshare.Application.Me;
 using Natoshare.Application.Months;
+using Natoshare.Application.Dashboard;
+using Natoshare.Application.Maintenance;
 using Natoshare.Application.Notifications;
+using Natoshare.Application.PeopleAndMoney;
+using Natoshare.Application.Planning;
+using Natoshare.Application.Reports;
+using Natoshare.Application.Subscriptions;
 using Natoshare.Domain.Identity;
 using Natoshare.Infrastructure.Audit;
 using Natoshare.Infrastructure.Budgeting;
+using Natoshare.Infrastructure.Dashboard;
 using Natoshare.Infrastructure.Identity;
 using Natoshare.Infrastructure.Insights;
 using Natoshare.Infrastructure.Ledger;
+using Natoshare.Infrastructure.Maintenance;
 using Natoshare.Infrastructure.Months;
 using Natoshare.Infrastructure.Notifications;
+using Natoshare.Infrastructure.PeopleAndMoney;
 using Natoshare.Infrastructure.Persistence;
+using Natoshare.Infrastructure.Planning;
+using Natoshare.Infrastructure.Reports;
 using Natoshare.Infrastructure.Time;
 
 namespace Natoshare.Infrastructure;
@@ -104,6 +115,33 @@ public static class InfrastructureServiceCollectionExtensions
 
         // Month lifecycle: closing a month, and the admin reopen path.
         services.AddScoped<IMonthLifecycleService, MonthLifecycleService>();
+
+        // People & money: loans, debts, promises, investment logging, and the net
+        // position and obligations calendar built on top of them.
+        services.AddScoped<ILoanOutService, LoanOutService>();
+        services.AddScoped<IDebtInService, DebtInService>();
+        services.AddScoped<IPromiseService, PromiseService>();
+        services.AddScoped<IInvestmentLogService, InvestmentLogService>();
+        services.AddScoped<INetPositionService, NetPositionService>();
+        services.AddScoped<IObligationsService, ObligationsService>();
+
+        // Recurring items, gated behind a real (if simple) trial check, and the
+        // housekeeping jobs that keep accounts and the ledger honest over time.
+        services.AddScoped<IEntitlementService, EntitlementService>();
+        services.AddScoped<RecurringItemService>();
+        services.AddScoped<IRecurringItemService>(sp => sp.GetRequiredService<RecurringItemService>());
+        services.AddScoped<IRecurringItemMaterializer>(sp => sp.GetRequiredService<RecurringItemService>());
+        services.AddScoped<IMaintenanceJobs, MaintenanceJobs>();
+
+        // Reports and the dashboard aggregate, built entirely on top of what the
+        // phases above it already produce.
+        services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+
+        // Subscription tiers & gating: plan entitlements were already added in
+        // Phase 7 for recurring items, this is where the real Free/Pro/trial logic
+        // behind them finally lives.
+        services.AddScoped<ISubscriptionService, SubscriptionService>();
 
         return services;
     }

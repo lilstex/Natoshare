@@ -30,14 +30,19 @@ public class JwtTokenService : ITokenService
 
         // These are the facts about the user that we put inside the token itself, so
         // the API can trust them without asking the database on every single request.
-        // "plan" is hard-coded to Free for now, Phase 9 is what makes real plans work.
+        // "plan" here is only ever a display hint (a trial reads as "Pro" the same
+        // way IEntitlementService treats it), it never reflects a real paid
+        // subscription bought after the token was issued, that always needs an
+        // actual database read (see IEntitlementService), which token creation
+        // deliberately stays synchronous and free of.
+        var isTrial = _clock.UtcNow < user.TrialEndsAt;
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
             new("name", user.DisplayName),
             new(ClaimTypes.Role, role),
-            new("plan", "Free"),
+            new("plan", isTrial ? "Pro" : "Free"),
             new("trialEndsAt", user.TrialEndsAt.ToUnixTimeSeconds().ToString()),
         };
 

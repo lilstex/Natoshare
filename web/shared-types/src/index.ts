@@ -49,6 +49,9 @@ export type Category = {
   sortOrder: number;
   isArchived: boolean;
   currentPercentage: number | null;
+  // Over the Free plan's category limit, data is kept, only new spending against
+  // it is refused, see IEntitlementService on the backend.
+  isLocked: boolean;
 };
 
 export type CategoryAllocationInput = {
@@ -262,6 +265,7 @@ export type CategoryBalance = {
   deployedBalance: MoneyAmount;
   pace: PaceInfo;
   safeToSpend: SafeToSpend;
+  isLocked: boolean;
 };
 
 export type BalancesResult = {
@@ -312,8 +316,8 @@ export type Notification = {
   createdAt: string;
 };
 
-// Only these four kinds can actually be adjusted right now, the rest have no working
-// alert behind them yet.
+// As of Phase 7 every kind in the NotificationKind vocabulary is adjustable, none
+// are left waiting on a later phase.
 export type AdjustableAlertKind =
   | "OverPaceCategory"
   | "OverspendCategory"
@@ -322,7 +326,13 @@ export type AdjustableAlertKind =
   | "MonthCloseReminder"
   | "FixedAccountUnconfirmed"
   | "CarriedDeficitApplied"
-  | "MonthEndSummary";
+  | "MonthEndSummary"
+  | "DebtDueSoon"
+  | "DebtOverdue"
+  | "LoanReturnDueSoon"
+  | "LoanOverdue"
+  | "PromiseReminder"
+  | "RecurringItemDue";
 
 export type AlertPreference = {
   kind: AdjustableAlertKind;
@@ -456,4 +466,385 @@ export type CloseMonthResult = {
   status: MonthStatus;
   closedAt: string;
   categories: CategoryMonthDetail[];
+};
+
+// --- Phase 6: people & money -------------------------------------------------
+
+export type AccountRefKind = "Category" | "CategorySavings" | "FlexiblePool";
+
+export type AccountRefInput = {
+  kind: AccountRefKind;
+  categoryId: string | null;
+};
+
+export type LoanOutStatus = "Outstanding" | "PartiallyRepaid" | "Repaid" | "WrittenOff";
+
+export type LoanRepayment = {
+  id: string;
+  amount: MoneyAmount;
+  receivedOn: string;
+  note: string | null;
+  linkedDestination: AccountRefInput | null;
+  createdAt: string;
+};
+
+export type LoanOut = {
+  id: string;
+  borrowerName: string;
+  amount: MoneyAmount;
+  lentOn: string;
+  expectedReturnOn: string | null;
+  note: string | null;
+  status: LoanOutStatus;
+  linkedSource: AccountRefInput | null;
+  totalRepaid: MoneyAmount;
+  outstanding: MoneyAmount;
+  createdAt: string;
+  repayments: LoanRepayment[];
+};
+
+export type CreateLoanOutRequest = {
+  borrowerName: string;
+  amount: number;
+  lentOn: string;
+  expectedReturnOn: string | null;
+  note: string | null;
+  linkedSource: AccountRefInput | null;
+};
+
+export type CreateLoanRepaymentRequest = {
+  amount: number;
+  receivedOn: string;
+  note: string | null;
+  linkedDestination: AccountRefInput | null;
+};
+
+export type DebtInStatus = "Outstanding" | "PartiallyRepaid" | "Repaid";
+
+export type DebtRepayment = {
+  id: string;
+  amount: MoneyAmount;
+  paidOn: string;
+  note: string | null;
+  linkedSource: AccountRefInput | null;
+  createdAt: string;
+};
+
+export type DebtIn = {
+  id: string;
+  lenderName: string;
+  amount: MoneyAmount;
+  borrowedOn: string;
+  dueOn: string | null;
+  note: string | null;
+  status: DebtInStatus;
+  totalRepaid: MoneyAmount;
+  outstanding: MoneyAmount;
+  createdAt: string;
+  repayments: DebtRepayment[];
+};
+
+export type CreateDebtInRequest = {
+  lenderName: string;
+  amount: number;
+  borrowedOn: string;
+  dueOn: string | null;
+  note: string | null;
+};
+
+export type CreateDebtRepaymentRequest = {
+  amount: number;
+  paidOn: string;
+  note: string | null;
+  linkedSource: AccountRefInput | null;
+};
+
+export type PromiseStatus = "Open" | "PartiallyRedeemed" | "Redeemed" | "Cancelled";
+
+export type PromiseRedemption = {
+  id: string;
+  amount: MoneyAmount;
+  redeemedOn: string;
+  sourceAccount: AccountRefInput;
+  note: string | null;
+  createdAt: string;
+};
+
+// Named MoneyPromise, not Promise, so it never shadows the built-in JavaScript
+// Promise<T> in any file that imports it.
+export type MoneyPromise = {
+  id: string;
+  personName: string;
+  amount: MoneyAmount;
+  note: string | null;
+  madeOn: string;
+  status: PromiseStatus;
+  totalRedeemed: MoneyAmount;
+  outstanding: MoneyAmount;
+  createdAt: string;
+  redemptions: PromiseRedemption[];
+};
+
+export type CreatePromiseRequest = {
+  personName: string;
+  amount: number;
+  note: string | null;
+  madeOn: string;
+};
+
+export type CreatePromiseRedemptionRequest = {
+  amount: number;
+  redeemedOn: string;
+  sourceAccount: AccountRefInput;
+  note: string | null;
+};
+
+export type InvestmentLog = {
+  id: string;
+  amount: MoneyAmount;
+  investedOn: string;
+  platform: string;
+  note: string | null;
+  createdAt: string;
+};
+
+export type CreateInvestmentLogRequest = {
+  amount: number;
+  investedOn: string;
+  platform: string;
+  note: string | null;
+};
+
+export type InvestmentSummary = {
+  allocated: MoneyAmount;
+  invested: MoneyAmount;
+  shortfall: MoneyAmount;
+  byPlatform: { platform: string; amount: MoneyAmount }[];
+};
+
+export type NetPosition = {
+  total: MoneyAmount;
+  breakdown: {
+    savings: MoneyAmount;
+    deployed: MoneyAmount;
+    pool: MoneyAmount;
+    loansOut: MoneyAmount;
+    debtsIn: MoneyAmount;
+    openPromises: MoneyAmount;
+    carriedDeficits: MoneyAmount;
+  };
+};
+
+export type ObligationType =
+  | "DebtDue"
+  | "LoanReturn"
+  | "PromiseReminder"
+  | "RecurringItem"
+  | "FixedAccountConfirm"
+  | "MonthClose"
+  | "CarriedDeficit";
+
+export type ObligationItem = {
+  date: string;
+  type: ObligationType;
+  title: string;
+  amount: MoneyAmount | null;
+  entityId: string | null;
+  severity: "Info" | "Warning" | "Critical";
+};
+
+// --- Phase 7: recurring items -------------------------------------------------
+
+export type RecurringItemKind = "Expense" | "Income";
+
+export type RecurringCadence = "Monthly" | "Weekly" | "BiWeekly";
+
+export type RecurringItemMode = "Remind" | "AutoPost";
+
+export type RecurringItem = {
+  id: string;
+  kind: RecurringItemKind;
+  amount: MoneyAmount;
+  description: string;
+  categoryId: string | null;
+  incomeType: IncomeType | null;
+  cadence: RecurringCadence;
+  // For Monthly, 0 means "end of month", 1-28 means that day of the month. For
+  // Weekly and BiWeekly, this is a day of week, Sunday = 0 through Saturday = 6.
+  anchorDay: number;
+  mode: RecurringItemMode;
+  nextRunOn: string;
+  lastPostedOn: string | null;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type CreateRecurringItemRequest = {
+  kind: RecurringItemKind;
+  amount: number;
+  description: string;
+  categoryId: string | null;
+  incomeType: IncomeType | null;
+  cadence: RecurringCadence;
+  anchorDay: number;
+  mode: RecurringItemMode;
+};
+
+export type UpdateRecurringItemRequest = {
+  amount?: number | null;
+  description?: string | null;
+  categoryId?: string | null;
+  incomeType?: IncomeType | null;
+  cadence?: RecurringCadence | null;
+  anchorDay?: number | null;
+  mode?: RecurringItemMode | null;
+  isActive?: boolean | null;
+};
+
+export type CommittedTotalItem = {
+  id: string;
+  description: string;
+  monthlyAmount: MoneyAmount;
+};
+
+export type CommittedTotal = {
+  monthlyExpenseTotal: MoneyAmount;
+  items: CommittedTotalItem[];
+};
+
+// --- Phase 8: dashboard & reports -------------------------------------------------
+
+export type RecentTransaction = {
+  id: string;
+  description: string;
+  amount: MoneyAmount;
+  isIncome: boolean;
+  occurredOn: string;
+};
+
+export type OpenPromiseSummary = {
+  id: string;
+  personName: string;
+  outstanding: MoneyAmount;
+};
+
+export type Dashboard = {
+  netPosition: NetPosition;
+  month: { year: number; month: number; status: string };
+  categoryCards: CategoryBalance[];
+  pacingOverview: PacingInsight[];
+  flexiblePool: { balance: MoneyAmount };
+  obligations: ObligationItem[];
+  openPromises: OpenPromiseSummary[];
+  outstandingLoansOut: MoneyAmount;
+  debtsOwed: MoneyAmount;
+  recentTransactions: RecentTransaction[];
+  unreadAlerts: number;
+};
+
+export type ReportCategoryStatus = "Over" | "Under" | "Unused";
+
+export type ReportCategoryLine = {
+  categoryId: string;
+  categoryName: string;
+  budget: MoneyAmount;
+  actual: MoneyAmount;
+  saved: MoneyAmount;
+  deficit: MoneyAmount;
+  variance: number;
+  status: ReportCategoryStatus;
+  savingsRate: number;
+  prevMonthDelta: number | null;
+};
+
+export type ReportDeficitCoverageLine = {
+  categoryId: string;
+  categoryName: string;
+  amount: MoneyAmount;
+  // A read-only value coming back from a report, so this can be any method that
+  // has ever cleared a deficit (including NextMonthAllocation, Mixed and None),
+  // unlike DeficitResolutionMethod above which is only the subset a request body
+  // is allowed to send.
+  method: string;
+  sourceCategoryId: string | null;
+  carriedForward: boolean;
+};
+
+export type MonthlyReport = {
+  year: number;
+  month: number;
+  isClosed: boolean;
+  categories: ReportCategoryLine[];
+  deficitsAndCoverage: ReportDeficitCoverageLine[];
+  totalBudget: MoneyAmount;
+  totalActual: MoneyAmount;
+  totalSaved: MoneyAmount;
+  overallSavingsRate: number;
+};
+
+export type RangeReport = {
+  fromYear: number;
+  fromMonth: number;
+  toYear: number;
+  toMonth: number;
+  months: MonthlyReport[];
+  totalBudget: MoneyAmount;
+  totalActual: MoneyAmount;
+  totalSaved: MoneyAmount;
+  overallSavingsRate: number;
+};
+
+export type AnnualReport = {
+  year: number;
+  months: MonthlyReport[];
+  totalBudget: MoneyAmount;
+  totalActual: MoneyAmount;
+  totalSaved: MoneyAmount;
+  overallSavingsRate: number;
+};
+
+// --- Phase 9: subscription tiers & gating -------------------------------------------------
+
+export type PlanName = "Free" | "Pro";
+
+export type PlanEntitlements = {
+  plan: PlanName;
+  isTrial: boolean;
+  trialEndsAt: string;
+  maxCategories: number | null;
+  historyWindowDays: number | null;
+  sinkingFund: boolean;
+  deficitCoverFromSavings: boolean;
+  recurring: boolean;
+  export: boolean;
+};
+
+export type SubscriptionStatus = {
+  plan: PlanName;
+  status: "None" | "Pending" | "Active" | "Cancelled" | "Expired";
+  isTrial: boolean;
+  trialEndsAt: string;
+  periodEnd: string | null;
+};
+
+export type SubscriptionRecord = {
+  id: string;
+  plan: PlanName;
+  billingCycle: "Monthly" | "Annual";
+  status: "Pending" | "Active" | "Cancelled" | "Expired";
+  reference: string;
+  requestedAt: string;
+  activatedAt: string | null;
+  periodEnd: string | null;
+};
+
+export type UpgradeSubscriptionRequest = {
+  plan: "Pro";
+  billingCycle: "monthly" | "annual";
+};
+
+export type UpgradeResult = {
+  reference: string;
+  status: string;
+  message: string;
 };

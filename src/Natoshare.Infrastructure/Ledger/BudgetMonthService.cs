@@ -22,12 +22,14 @@ public class BudgetMonthService : IBudgetMonthService
     private readonly NatoshareDbContext _dbContext;
     private readonly IClock _clock;
     private readonly ILedgerService _ledgerService;
+    private readonly IEntitlementService _entitlementService;
 
-    public BudgetMonthService(NatoshareDbContext dbContext, IClock clock, ILedgerService ledgerService)
+    public BudgetMonthService(NatoshareDbContext dbContext, IClock clock, ILedgerService ledgerService, IEntitlementService entitlementService)
     {
         _dbContext = dbContext;
         _clock = clock;
         _ledgerService = ledgerService;
+        _entitlementService = entitlementService;
     }
 
     public async Task<MonthSnapshot> GetSnapshotAsync(Guid userId, int year, int month, CancellationToken cancellationToken = default)
@@ -68,8 +70,7 @@ public class BudgetMonthService : IBudgetMonthService
         // what actually gets applied the moment the month opens for real).
         var previousMonth = new DateOnly(year, month, 1).AddMonths(-1);
         var previousCategoryMonths = await PreviousClosedCategoryMonthsAsync(userId, previousMonth, cancellationToken);
-        var user = await _dbContext.Users.FirstAsync(u => u.Id == userId, cancellationToken);
-        var sinkingFundEnabled = SinkingFundEnabledFor(user);
+        var sinkingFundEnabled = (await _entitlementService.ResolveAsync(userId, cancellationToken)).SinkingFund;
 
         return new MonthSnapshot
         {
@@ -119,7 +120,7 @@ public class BudgetMonthService : IBudgetMonthService
         var user = await _dbContext.Users.FirstAsync(u => u.Id == userId, cancellationToken);
         var previousMonth = new DateOnly(year, month, 1).AddMonths(-1);
         var previousCategoryMonths = await PreviousClosedCategoryMonthsAsync(userId, previousMonth, cancellationToken);
-        var sinkingFundEnabled = SinkingFundEnabledFor(user);
+        var sinkingFundEnabled = (await _entitlementService.ResolveAsync(userId, cancellationToken)).SinkingFund;
 
         var budgetMonth = new BudgetMonth
         {
@@ -146,10 +147,9 @@ public class BudgetMonthService : IBudgetMonthService
                 BudgetMonthId = budgetMonth.Id,
                 CategoryId = allocation.CategoryId,
                 AllocatedAmount = Money.Zero,
-                // Free plan accounts do not carry savings forward (a real product
-                // rule, see 00-plan.md), but plan/entitlement checking is Phase 9
-                // work, so this always applies for now, same as every other
-                // plan-gated check in the app until then.
+                // Free plan accounts do not carry savings forward (docs/00-plan.md
+                // section 5's "Sinking-fund carry-over" row), a trial or Pro
+                // account gets the real carried-in figure.
                 CarriedInSavings = sinkingFundEnabled ? previous?.CarriedOutSavings ?? Money.Zero : Money.Zero,
                 CarriedInDeficit = previous?.CarriedOutDeficit ?? Money.Zero,
             };
@@ -203,10 +203,6 @@ public class BudgetMonthService : IBudgetMonthService
 
         return previous?.CategoryMonths.ToDictionary(cm => cm.CategoryId) ?? [];
     }
-
-    // Stubbed the same way plan limits are stubbed everywhere else in the app
-    // (see CategoryService), until Phase 9 builds real plans this always says yes.
-    private static bool SinkingFundEnabledFor(User user) => true;
 
     private async Task NotifyCarriedDeficitAppliedAsync(User user, CategoryMonth categoryMonth, CancellationToken cancellationToken)
     {

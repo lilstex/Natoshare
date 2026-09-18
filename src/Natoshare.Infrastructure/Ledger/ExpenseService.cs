@@ -20,19 +20,22 @@ public class ExpenseService : IExpenseService
     private readonly ILedgerService _ledgerService;
     private readonly IBudgetMonthService _budgetMonthService;
     private readonly IAlertEvaluationService _alertEvaluationService;
+    private readonly IEntitlementService _entitlementService;
 
     public ExpenseService(
         NatoshareDbContext dbContext,
         IClock clock,
         ILedgerService ledgerService,
         IBudgetMonthService budgetMonthService,
-        IAlertEvaluationService alertEvaluationService)
+        IAlertEvaluationService alertEvaluationService,
+        IEntitlementService entitlementService)
     {
         _dbContext = dbContext;
         _clock = clock;
         _ledgerService = ledgerService;
         _budgetMonthService = budgetMonthService;
         _alertEvaluationService = alertEvaluationService;
+        _entitlementService = entitlementService;
     }
 
     public async Task<IReadOnlyList<ExpenseDto>> ListAsync(
@@ -58,6 +61,7 @@ public class ExpenseService : IExpenseService
             query = query.Where(e => e.CategoryId == categoryId);
         }
 
+        from = await ClampToHistoryWindowAsync(userId, from, cancellationToken);
         if (from is not null)
         {
             query = query.Where(e => e.OccurredOn >= from);
@@ -102,6 +106,7 @@ public class ExpenseService : IExpenseService
         CategoryMonth? categoryMonth = null;
         if (source == ExpenseSource.Category)
         {
+            await EnsureCategoryNotLockedAsync(userId, request.CategoryId!.Value, cancellationToken);
             categoryMonth = await _dbContext.CategoryMonths
                 .FirstOrDefaultAsync(cm => cm.BudgetMonthId == budgetMonthId && cm.CategoryId == request.CategoryId!.Value, cancellationToken)
                 ?? throw new NotFoundException("This category is not part of this month's split.");
@@ -168,6 +173,11 @@ public class ExpenseService : IExpenseService
 
         var newAmount = request.Amount.HasValue ? new Money(request.Amount.Value) : expense.Amount;
         var newCategoryId = request.CategoryId ?? expense.CategoryId;
+
+        if (expense.Source == ExpenseSource.Category && newCategoryId != expense.CategoryId)
+        {
+            await EnsureCategoryNotLockedAsync(userId, newCategoryId!.Value, cancellationToken);
+        }
 
         await _ledgerService.ReverseAsync(SourceTxnType.Expense, expense.Id, "Edited", cancellationToken);
 
@@ -344,6 +354,32 @@ public class ExpenseService : IExpenseService
         {
             throw new ConflictException("This month is closed, nothing can be changed in it any more.");
         }
+    }
+
+    // A category beyond the Free-plan limit is locked, not deleted, its past
+    // expenses stay fully readable, only NEW spending against it is refused.
+    private async Task EnsureCategoryNotLockedAsync(Guid userId, Guid categoryId, CancellationToken cancellationToken)
+    {
+        var lockedCategoryIds = await _entitlementService.GetLockedCategoryIdsAsync(userId, cancellationToken);
+        if (lockedCategoryIds.Contains(categoryId))
+        {
+            throw new UpgradeRequiredException("This category is locked because it is over the Free plan's category limit, upgrade to Pro to use it again.");
+        }
+    }
+
+    // Free accounts can only see a limited window of their own history (docs/00-plan.md
+    // section 5), a Pro account or one still on trial gets the real, unclamped date.
+    private async Task<DateOnly?> ClampToHistoryWindowAsync(Guid userId, DateOnly? from, CancellationToken cancellationToken)
+    {
+        var entitlements = await _entitlementService.ResolveAsync(userId, cancellationToken);
+        if (entitlements.HistoryWindowDays is null)
+        {
+            return from;
+        }
+
+        var user = await _dbContext.Users.FirstAsync(u => u.Id == userId, cancellationToken);
+        var earliestAllowed = UserTime.TodayFor(user.TimeZoneId, _clock.UtcNow).AddDays(-entitlements.HistoryWindowDays.Value);
+        return from is null || from < earliestAllowed ? earliestAllowed : from;
     }
 
     private async Task<Dictionary<Guid, string>> TagNameLookupAsync(Guid userId, CancellationToken cancellationToken)

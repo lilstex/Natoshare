@@ -1,15 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using Natoshare.Domain.Budgeting;
+using Natoshare.Domain.Subscriptions;
 using Natoshare.Infrastructure.Persistence;
 
 namespace Natoshare.Infrastructure.Seed;
 
-// Makes sure the budget templates exist. Unlike DevDataSeeder, this runs in every
-// environment (production too), because templates are real content the onboarding
-// wizard needs, not a local dev convenience.
+// Makes sure the budget templates, plan configs and feature flags exist. Unlike
+// DevDataSeeder, this runs in every environment (production too), because this is
+// real content the app needs to function, not a local dev convenience.
 public static class ReferenceDataSeeder
 {
     public static async Task SeedAsync(NatoshareDbContext dbContext, CancellationToken cancellationToken = default)
+    {
+        await SeedBudgetTemplatesAsync(dbContext, cancellationToken);
+        await SeedPlanConfigsAsync(dbContext, cancellationToken);
+        await SeedFeatureFlagsAsync(dbContext, cancellationToken);
+    }
+
+    private static async Task SeedBudgetTemplatesAsync(NatoshareDbContext dbContext, CancellationToken cancellationToken)
     {
         if (await dbContext.BudgetTemplates.AnyAsync(cancellationToken))
         {
@@ -46,6 +54,56 @@ public static class ReferenceDataSeeder
         };
 
         dbContext.BudgetTemplates.AddRange(templates);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    // Exact numbers from docs/00-plan.md section 5's capability table. An admin can
+    // tune these later (that is the whole point of storing them instead of
+    // hardcoding), this only ever seeds them once.
+    private static async Task SeedPlanConfigsAsync(NatoshareDbContext dbContext, CancellationToken cancellationToken)
+    {
+        if (await dbContext.PlanConfigs.AnyAsync(cancellationToken))
+        {
+            return;
+        }
+
+        dbContext.PlanConfigs.AddRange(
+            new PlanConfig
+            {
+                Id = Guid.CreateVersion7(),
+                Plan = PlanTier.Free,
+                MaxCategories = 4,
+                HistoryWindowDays = 60,
+                SinkingFundEnabled = false,
+                DeficitCoverFromSavingsEnabled = false,
+                RecurringItemsEnabled = false,
+                ExportEnabled = false,
+            },
+            new PlanConfig
+            {
+                Id = Guid.CreateVersion7(),
+                Plan = PlanTier.Pro,
+                MaxCategories = null,
+                HistoryWindowDays = null,
+                SinkingFundEnabled = true,
+                DeficitCoverFromSavingsEnabled = true,
+                RecurringItemsEnabled = true,
+                ExportEnabled = true,
+            });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task SeedFeatureFlagsAsync(NatoshareDbContext dbContext, CancellationToken cancellationToken)
+    {
+        if (await dbContext.FeatureFlags.AnyAsync(f => f.Key == "PaymentsEnabled", cancellationToken))
+        {
+            return;
+        }
+
+        // No real payment gateway in v1 (docs/00-plan.md section 5), every upgrade
+        // request waits on an admin to activate it by hand.
+        dbContext.FeatureFlags.Add(new FeatureFlag { Key = "PaymentsEnabled", Enabled = false });
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

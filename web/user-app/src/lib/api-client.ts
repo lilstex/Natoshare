@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api/v1";
+// Exported so a page that needs a plain, non-fetch URL (like a report export a
+// browser downloads directly with window.open) can build one against the same base.
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api/v1";
 
 // This is what we throw whenever the API says something went wrong. It carries the
 // status code and, when the problem is bad input, the field-by-field errors too, so a

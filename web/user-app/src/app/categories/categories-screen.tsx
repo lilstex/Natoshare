@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Category, CategoryAllocationInput, CategoryKind } from "@natoshare/shared-types";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ export function CategoriesScreen() {
   const [newName, setNewName] = useState("");
   const [newKind, setNewKind] = useState<CategoryKind>("Standard");
   const [isCreating, setIsCreating] = useState(false);
+  const [needsUpgradeToAdd, setNeedsUpgradeToAdd] = useState(false);
 
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [archiveDraft, setArchiveDraft] = useState<ArchiveDraft | null>(null);
@@ -68,6 +70,7 @@ export function CategoriesScreen() {
 
     setIsCreating(true);
     setError(null);
+    setNeedsUpgradeToAdd(false);
 
     try {
       await apiFetch("/categories", {
@@ -78,7 +81,11 @@ export function CategoriesScreen() {
       setNewName("");
       await loadCategories();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not create that category.");
+      if (err instanceof ApiError && err.status === 403) {
+        setNeedsUpgradeToAdd(true);
+      } else {
+        setError(err instanceof ApiError ? err.message : "Could not create that category.");
+      }
     } finally {
       setIsCreating(false);
     }
@@ -164,10 +171,16 @@ export function CategoriesScreen() {
             <div key={category.id} className="rounded-xl border border-border bg-surface p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-text">{category.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-text">{category.name}</p>
+                    {category.isLocked && (
+                      <span className="rounded-full bg-warning-tint px-2 py-0.5 text-[11px] font-semibold text-warning">Locked</span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted">
                     {category.kind === "FixedAccount" ? "Fixed account" : "Standard"}
                     {category.currentPercentage !== null ? ` · ${category.currentPercentage}%` : " · not split yet"}
+                    {category.isLocked ? " · over the Free plan's category limit" : ""}
                   </p>
                 </div>
                 <button
@@ -245,6 +258,15 @@ export function CategoriesScreen() {
             <p className="mt-1.5 text-xs text-subtle">
               A new category starts with no percentage, give it a share by setting up a new split.
             </p>
+            {needsUpgradeToAdd && (
+              <p className="mt-2 rounded-lg bg-warning-tint px-3 py-2 text-xs text-warning">
+                Free accounts are limited to 4 categories.{" "}
+                <Link href="/plans" className="font-semibold underline">
+                  Upgrade to Pro
+                </Link>{" "}
+                for unlimited categories.
+              </p>
+            )}
           </div>
 
           {archivedCategories.length > 0 && (

@@ -45,6 +45,17 @@ public sealed class AuthenticationFailedException : DomainException
     }
 }
 
+// The account cannot use this feature right now because its trial has ended and it
+// has no paid plan. See docs/02-api-surface.md's 💳 marker for the exact contract
+// this maps to.
+public sealed class UpgradeRequiredException : DomainException
+{
+    public UpgradeRequiredException(string message)
+        : base(message, 403)
+    {
+    }
+}
+
 // One or more fields on the request did not pass validation. Errors is a map of field
 // name to the list of problems with that field, so the frontend can show them next to
 // the right input.

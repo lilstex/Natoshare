@@ -30,11 +30,12 @@ public class AlertsAndNotificationsTests : IClassFixture<NatoshareApiFactory>
 
         var preferences = await GetAsync<List<AlertPreferenceDto>>("/api/v1/notifications/preferences", accessToken);
 
-        preferences.Should().HaveCount(8);
+        preferences.Should().HaveCount(14);
         preferences.Should().OnlyContain(p => p.Enabled);
         preferences.Select(p => p.Kind).Should().BeEquivalentTo([
             "OverPaceCategory", "OverspendCategory", "CategoryInDeficit", "SafeToSpendLow",
             "MonthCloseReminder", "FixedAccountUnconfirmed", "CarriedDeficitApplied", "MonthEndSummary",
+            "DebtDueSoon", "DebtOverdue", "LoanReturnDueSoon", "LoanOverdue", "PromiseReminder", "RecurringItemDue",
         ]);
     }
 

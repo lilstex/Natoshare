@@ -10,4 +10,8 @@ public interface IAlertEvaluationService
     Task EvaluateCategoryAsync(Guid userId, Guid budgetMonthId, Guid categoryId, CancellationToken cancellationToken = default);
 
     Task EvaluateAllOpenMonthsAsync(CancellationToken cancellationToken = default);
+
+    // Run once a day by a recurring job: debts and loans coming due or already
+    // overdue, and promises the user can now afford to redeem.
+    Task EvaluateObligationsAsync(CancellationToken cancellationToken = default);
 }

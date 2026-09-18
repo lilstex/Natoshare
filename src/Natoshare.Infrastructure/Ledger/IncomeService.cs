@@ -18,13 +18,17 @@ public class IncomeService : IIncomeService
     private readonly IClock _clock;
     private readonly ILedgerService _ledgerService;
     private readonly IBudgetMonthService _budgetMonthService;
+    private readonly IEntitlementService _entitlementService;
 
-    public IncomeService(NatoshareDbContext dbContext, IClock clock, ILedgerService ledgerService, IBudgetMonthService budgetMonthService)
+    public IncomeService(
+        NatoshareDbContext dbContext, IClock clock, ILedgerService ledgerService, IBudgetMonthService budgetMonthService,
+        IEntitlementService entitlementService)
     {
         _dbContext = dbContext;
         _clock = clock;
         _ledgerService = ledgerService;
         _budgetMonthService = budgetMonthService;
+        _entitlementService = entitlementService;
     }
 
     public async Task<IReadOnlyList<IncomeDto>> ListAsync(
@@ -37,6 +41,7 @@ public class IncomeService : IIncomeService
             query = query.Where(i => i.Type.ToString() == type);
         }
 
+        from = await ClampToHistoryWindowAsync(userId, from, cancellationToken);
         if (from is not null)
         {
             query = query.Where(i => i.OccurredOn >= from);
@@ -259,6 +264,21 @@ public class IncomeService : IIncomeService
         {
             throw new ConflictException("This month is closed, nothing can be changed in it any more.");
         }
+    }
+
+    // Free accounts can only see a limited window of their own history (docs/00-plan.md
+    // section 5), a Pro account or one still on trial gets the real, unclamped date.
+    private async Task<DateOnly?> ClampToHistoryWindowAsync(Guid userId, DateOnly? from, CancellationToken cancellationToken)
+    {
+        var entitlements = await _entitlementService.ResolveAsync(userId, cancellationToken);
+        if (entitlements.HistoryWindowDays is null)
+        {
+            return from;
+        }
+
+        var user = await _dbContext.Users.FirstAsync(u => u.Id == userId, cancellationToken);
+        var earliestAllowed = UserTime.TodayFor(user.TimeZoneId, _clock.UtcNow).AddDays(-entitlements.HistoryWindowDays.Value);
+        return from is null || from < earliestAllowed ? earliestAllowed : from;
     }
 
     private async Task<Dictionary<Guid, Category>> CategoryLookupAsync(IEnumerable<Guid> categoryIds, CancellationToken cancellationToken)

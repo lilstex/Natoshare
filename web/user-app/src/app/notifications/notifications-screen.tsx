@@ -22,6 +22,12 @@ const KIND_LABELS: Record<AdjustableAlertKind, { title: string; description: str
   FixedAccountUnconfirmed: { title: "Fixed account not confirmed", description: "Let me know if a fixed account transfer was never confirmed." },
   CarriedDeficitApplied: { title: "Deficit carried in", description: "Tell me when a new month opens with a deficit carried in from last month." },
   MonthEndSummary: { title: "Month closed summary", description: "A wrap-up of what I spent and saved once a month is closed." },
+  DebtDueSoon: { title: "Debt due soon", description: "Warn a few days before something I borrowed is due back." },
+  DebtOverdue: { title: "Debt overdue", description: "Let me know the moment something I borrowed is overdue." },
+  LoanReturnDueSoon: { title: "Loan return due soon", description: "Warn a few days before money I lent out was expected back." },
+  LoanOverdue: { title: "Loan overdue", description: "Let me know the moment money I lent out is overdue." },
+  PromiseReminder: { title: "Promise now affordable", description: "Tell me once the Flexible Pool can cover a promise I still owe." },
+  RecurringItemDue: { title: "Recurring item due", description: "Remind me when a recurring income or expense comes due." },
 };
 
 // The notification centre: everything Natoshare has told the user, and a place to

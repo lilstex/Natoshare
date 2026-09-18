@@ -7,6 +7,9 @@ using Natoshare.Domain.Common;
 using Natoshare.Domain.Identity;
 using Natoshare.Domain.Ledger;
 using Natoshare.Domain.Notifications;
+using Natoshare.Domain.PeopleAndMoney;
+using Natoshare.Domain.Planning;
+using Natoshare.Domain.Subscriptions;
 using Natoshare.Domain.Transactions;
 
 namespace Natoshare.Infrastructure.Persistence;
@@ -66,6 +69,28 @@ public class NatoshareDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gu
     public DbSet<Notification> Notifications => Set<Notification>();
 
     public DbSet<AlertPreference> AlertPreferences => Set<AlertPreference>();
+
+    public DbSet<LoanOut> LoansOut => Set<LoanOut>();
+
+    public DbSet<LoanRepayment> LoanRepayments => Set<LoanRepayment>();
+
+    public DbSet<DebtIn> DebtsIn => Set<DebtIn>();
+
+    public DbSet<DebtRepayment> DebtRepayments => Set<DebtRepayment>();
+
+    public DbSet<Promise> Promises => Set<Promise>();
+
+    public DbSet<PromiseRedemption> PromiseRedemptions => Set<PromiseRedemption>();
+
+    public DbSet<InvestmentLog> InvestmentLogs => Set<InvestmentLog>();
+
+    public DbSet<RecurringItem> RecurringItems => Set<RecurringItem>();
+
+    public DbSet<SubscriptionRecord> SubscriptionRecords => Set<SubscriptionRecord>();
+
+    public DbSet<PlanConfig> PlanConfigs => Set<PlanConfig>();
+
+    public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

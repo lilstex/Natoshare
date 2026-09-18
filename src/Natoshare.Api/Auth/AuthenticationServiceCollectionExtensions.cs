@@ -49,6 +49,24 @@ public static class AuthenticationServiceCollectionExtensions
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30),
                 };
+
+                // A browser download (window.open) cannot send an Authorization
+                // header, so this one route also accepts the token as a query
+                // string param. Scoped narrowly to just the export route, not every
+                // request, so a token never needs to show up in a URL anywhere else.
+                bearerOptions.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["accessToken"];
+                        if (!string.IsNullOrEmpty(accessToken) && context.Request.Path.StartsWithSegments("/api/v1/reports/export"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    },
+                };
             });
 
         services.AddAuthorizationBuilder()

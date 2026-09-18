@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type {
-  BalancesResult,
   CategoryBalance,
+  Dashboard,
   DeficitListItem,
-  Expense,
-  Income,
   IncomeType,
   LogExpenseResult,
+  PlanEntitlements,
   ResolveDeficitRequest,
+  SpendingSummary,
 } from "@natoshare/shared-types";
 import { SEGMENT_COLORS } from "@/components/split-ring";
 import { SiteHeader } from "@/components/site-header";
@@ -21,16 +21,6 @@ import { useAuthStore } from "@/store/auth-store";
 
 type MeResponse = { user: { currencyCode: string; locale: string } };
 
-// One row in the recent activity list, income and expenses merged together and
-// sorted by date so it reads like a single timeline.
-type ActivityRow = {
-  id: string;
-  description: string;
-  amount: number;
-  isIncome: boolean;
-  occurredOn: string;
-};
-
 const STATUS_STYLES: Record<string, string> = {
   OnTrack: "bg-success-tint text-success",
   OverPace: "bg-warning-tint text-warning",
@@ -38,15 +28,28 @@ const STATUS_STYLES: Record<string, string> = {
   NotApplicable: "bg-surface-2 text-subtle",
 };
 
-// The screen a logged-in user lands on: what every category has right now, quick
-// forms to log income or an expense, and a way to resolve a category that has gone
-// into deficit, all backed by the real /balances, /income and /expenses endpoints.
+const OBLIGATION_LABELS: Record<string, string> = {
+  DebtDue: "Debt due",
+  LoanReturn: "Loan expected back",
+  PromiseReminder: "Promise",
+  RecurringItem: "Recurring item",
+  FixedAccountConfirm: "Confirm transfer",
+  MonthClose: "Month needs closing",
+  CarriedDeficit: "Carried deficit",
+};
+
+// The screen a logged-in user lands on: a hero net-position card, every category's
+// current standing, quick forms to log income or an expense, a way to resolve a
+// deficit, and what needs attention in the next 7 days, all from the one
+// /dashboard aggregate endpoint (matching docs/06-design-system.md's dashboard
+// screen pattern) plus the plain-English spending summary from /insights.
 export function DashboardScreen() {
   const accessToken = useAuthStore((state) => state.accessToken);
 
   const [accountLocale, setAccountLocale] = useState({ currencyCode: "USD", locale: "en" });
-  const [balances, setBalances] = useState<BalancesResult | null>(null);
-  const [activity, setActivity] = useState<ActivityRow[]>([]);
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  const [spendingSummary, setSpendingSummary] = useState<SpendingSummary | null>(null);
+  const [entitlements, setEntitlements] = useState<PlanEntitlements | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,22 +73,18 @@ export function DashboardScreen() {
   async function loadAll() {
     setIsLoading(true);
     try {
-      const [balancesResult, incomeResult, expenseResult] = await Promise.all([
-        apiFetch<BalancesResult>("/balances", { token: accessToken }),
-        apiFetch<Income[]>("/income?pageSize=10", { token: accessToken }),
-        apiFetch<Expense[]>("/expenses?pageSize=10", { token: accessToken }),
+      const [dashboardResult, spendingSummaryResult, entitlementsResult] = await Promise.all([
+        apiFetch<Dashboard>("/dashboard", { token: accessToken }),
+        apiFetch<SpendingSummary>("/insights/spending-summary", { token: accessToken }),
+        apiFetch<PlanEntitlements>("/me/entitlements", { token: accessToken }),
       ]);
 
-      setBalances(balancesResult);
-
-      const rows: ActivityRow[] = [
-        ...incomeResult.map((i) => ({ id: i.id, description: i.description, amount: i.amount, isIncome: true, occurredOn: i.occurredOn })),
-        ...expenseResult.map((e) => ({ id: e.id, description: e.description, amount: e.amount, isIncome: false, occurredOn: e.occurredOn })),
-      ].sort((a, b) => b.occurredOn.localeCompare(a.occurredOn));
-
-      setActivity(rows.slice(0, 10));
+      setDashboard(dashboardResult);
+      setSpendingSummary(spendingSummaryResult);
+      setEntitlements(entitlementsResult);
+      setError(null);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not load your balances.");
+      setError(err instanceof ApiError ? err.message : "Could not load your dashboard.");
     } finally {
       setIsLoading(false);
     }
@@ -98,9 +97,21 @@ export function DashboardScreen() {
       <main className="mx-auto max-w-5xl px-4 pb-16">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-text">
-            {balances ? `${monthName(balances.month.month)} ${balances.month.year}` : "Your money"}
+            {dashboard ? `${monthName(dashboard.month.month)} ${dashboard.month.year}` : "Your money"}
           </h1>
           <div className="flex gap-2">
+            <Link href="/people-money" className="inline-flex h-11 items-center justify-center rounded-full border border-border-strong bg-surface px-6 text-sm font-semibold text-text transition-colors hover:bg-surface-2">
+              Loans, debts & promises
+            </Link>
+            <Link href="/obligations" className="inline-flex h-11 items-center justify-center rounded-full border border-border-strong bg-surface px-6 text-sm font-semibold text-text transition-colors hover:bg-surface-2">
+              Obligations
+            </Link>
+            <Link href="/recurring" className="inline-flex h-11 items-center justify-center rounded-full border border-border-strong bg-surface px-6 text-sm font-semibold text-text transition-colors hover:bg-surface-2">
+              Recurring
+            </Link>
+            <Link href="/reports" className="inline-flex h-11 items-center justify-center rounded-full border border-border-strong bg-surface px-6 text-sm font-semibold text-text transition-colors hover:bg-surface-2">
+              Reports
+            </Link>
             <Link href="/close-month" className="inline-flex h-11 items-center justify-center rounded-full border border-border-strong bg-surface px-6 text-sm font-semibold text-text transition-colors hover:bg-surface-2">
               Close month
             </Link>
@@ -115,6 +126,38 @@ export function DashboardScreen() {
 
         {error && <p className="mt-4 rounded-xl bg-danger-tint px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 
+        {entitlements?.isTrial && (
+          <Link
+            href="/plans"
+            className="mt-4 flex items-center justify-between rounded-xl bg-primary-tint px-4 py-2.5 text-sm text-primary hover:opacity-90"
+          >
+            <span>Pro trial active until {new Date(entitlements.trialEndsAt).toLocaleDateString()}.</span>
+            <span className="font-semibold">See plans →</span>
+          </Link>
+        )}
+
+        {entitlements && !entitlements.isTrial && entitlements.plan === "Free" && (
+          <Link
+            href="/plans"
+            className="mt-4 flex items-center justify-between rounded-xl bg-surface-2 px-4 py-2.5 text-sm text-muted hover:text-text"
+          >
+            <span>You are on the Free plan, limited to {entitlements.maxCategories} categories and {entitlements.historyWindowDays} days of history.</span>
+            <span className="font-semibold">Upgrade to Pro →</span>
+          </Link>
+        )}
+
+        {dashboard && dashboard.unreadAlerts > 0 && (
+          <Link
+            href="/notifications"
+            className="mt-4 flex items-center justify-between rounded-xl bg-warning-tint px-4 py-2.5 text-sm text-warning hover:opacity-90"
+          >
+            <span>
+              {dashboard.unreadAlerts} unread alert{dashboard.unreadAlerts === 1 ? "" : "s"}
+            </span>
+            <span className="font-semibold">View →</span>
+          </Link>
+        )}
+
         {showIncomeForm && (
           <LogIncomeForm
             accessToken={accessToken}
@@ -126,10 +169,10 @@ export function DashboardScreen() {
           />
         )}
 
-        {showExpenseForm && balances && (
+        {showExpenseForm && dashboard && (
           <LogExpenseForm
             accessToken={accessToken}
-            categories={balances.categories}
+            categories={dashboard.categoryCards}
             currencyCode={accountLocale.currencyCode}
             locale={accountLocale.locale}
             onDone={() => {
@@ -142,23 +185,67 @@ export function DashboardScreen() {
 
         {isLoading ? (
           <p className="mt-8 text-sm text-muted">Loading…</p>
-        ) : balances ? (
+        ) : dashboard ? (
           <>
+            {/* Hero net-position card, see docs/06-design-system.md's dashboard screen pattern. */}
+            <div className="mt-6 rounded-2xl p-6 text-white" style={{ background: "var(--gradient-brand)" }}>
+              <p className="text-sm font-medium text-white/80">Net position</p>
+              <p className="mt-1 font-display text-4xl font-bold">
+                {formatMoney(dashboard.netPosition.total, accountLocale.currencyCode, accountLocale.locale)}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-white/80">
+                <span>Savings {formatMoney(dashboard.netPosition.breakdown.savings, accountLocale.currencyCode, accountLocale.locale)}</span>
+                <span>Deployed {formatMoney(dashboard.netPosition.breakdown.deployed, accountLocale.currencyCode, accountLocale.locale)}</span>
+                <span>Pool {formatMoney(dashboard.netPosition.breakdown.pool, accountLocale.currencyCode, accountLocale.locale)}</span>
+                <span>Loaned out {formatMoney(dashboard.netPosition.breakdown.loansOut, accountLocale.currencyCode, accountLocale.locale)}</span>
+                <span>Owed {formatMoney(dashboard.netPosition.breakdown.debtsIn, accountLocale.currencyCode, accountLocale.locale)}</span>
+              </div>
+            </div>
+
+            {spendingSummary && <p className="mt-4 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text">{spendingSummary.plainEnglish}</p>}
+
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <TotalTile label="Allocated" amount={balances.totals.allocated} currencyCode={accountLocale.currencyCode} locale={accountLocale.locale} />
-              <TotalTile label="Spent" amount={balances.totals.spent} currencyCode={accountLocale.currencyCode} locale={accountLocale.locale} />
-              <TotalTile label="Available" amount={balances.totals.available} currencyCode={accountLocale.currencyCode} locale={accountLocale.locale} />
               <TotalTile
                 label="Flexible Pool"
-                amount={balances.flexiblePool.balance}
+                amount={dashboard.flexiblePool.balance}
                 currencyCode={accountLocale.currencyCode}
                 locale={accountLocale.locale}
               />
+              <TotalTile
+                label="Safe to spend today"
+                amount={dashboard.categoryCards.reduce((sum, c) => sum + c.safeToSpend.daily, 0)}
+                currencyCode={accountLocale.currencyCode}
+                locale={accountLocale.locale}
+              />
+              <TotalTile
+                label="Loaned out"
+                amount={dashboard.outstandingLoansOut}
+                currencyCode={accountLocale.currencyCode}
+                locale={accountLocale.locale}
+              />
+              <TotalTile label="Owed" amount={dashboard.debtsOwed} currencyCode={accountLocale.currencyCode} locale={accountLocale.locale} />
             </div>
+
+            {dashboard.obligations.length > 0 && (
+              <>
+                <h2 className="mt-8 text-lg font-semibold text-text">Next 7 days</h2>
+                <div className="mt-3 flex flex-col gap-1.5">
+                  {dashboard.obligations.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-muted">{OBLIGATION_LABELS[item.type] ?? item.type}</span>
+                        <span className="text-sm text-text">{item.title}</span>
+                      </div>
+                      <span className="text-xs text-muted">{item.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
 
             <h2 className="mt-8 text-lg font-semibold text-text">Categories</h2>
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {balances.categories.map((category, index) => (
+              {dashboard.categoryCards.map((category, index) => (
                 <CategoryCard
                   key={category.categoryId}
                   category={category}
@@ -173,16 +260,16 @@ export function DashboardScreen() {
                     loadAll();
                   }}
                   accessToken={accessToken}
-                  year={balances.month.year}
-                  month={balances.month.month}
+                  year={dashboard.month.year}
+                  month={dashboard.month.month}
                 />
               ))}
             </div>
 
             <h2 className="mt-8 text-lg font-semibold text-text">Recent activity</h2>
             <div className="mt-3 flex flex-col gap-1.5">
-              {activity.length === 0 && <p className="text-sm text-muted">Nothing logged yet.</p>}
-              {activity.map((row) => (
+              {dashboard.recentTransactions.length === 0 && <p className="text-sm text-muted">Nothing logged yet.</p>}
+              {dashboard.recentTransactions.map((row) => (
                 <div key={row.id} className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-2.5">
                   <span className="text-sm text-text">{row.description}</span>
                   <span className={`text-sm font-semibold ${row.isIncome ? "text-success" : "text-text"}`}>
@@ -255,7 +342,10 @@ function CategoryCard({
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-center justify-between">
-        <span className="font-semibold text-text">{category.name}</span>
+        <span className="flex items-center gap-1.5 font-semibold text-text">
+          {category.name}
+          {category.isLocked && <span className="rounded-full bg-warning-tint px-1.5 py-0.5 text-[10px] font-semibold text-warning">Locked</span>}
+        </span>
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[statusLabel] ?? STATUS_STYLES.NotApplicable}`}>
           {statusLabel === "InDeficit" ? "In deficit" : statusLabel === "OverPace" ? "Over pace" : statusLabel === "OnTrack" ? "On track" : ""}
         </span>
@@ -572,8 +662,9 @@ function LogExpenseForm({
             className="h-10 rounded-lg border border-border-strong bg-surface px-2 text-sm outline-none focus:border-primary"
           >
             {categories.map((c) => (
-              <option key={c.categoryId} value={c.categoryId}>
+              <option key={c.categoryId} value={c.categoryId} disabled={c.isLocked}>
                 {c.name}
+                {c.isLocked ? " (locked, upgrade to use)" : ""}
               </option>
             ))}
           </select>

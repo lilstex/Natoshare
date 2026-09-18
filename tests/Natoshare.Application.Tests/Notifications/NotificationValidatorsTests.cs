@@ -8,12 +8,30 @@ public class UpdateAlertPreferenceInputValidatorTests
     private readonly UpdateAlertPreferenceInputValidator _validator = new();
 
     [Fact]
-    public void A_kind_from_a_later_phase_is_rejected()
+    public void A_kind_that_does_not_exist_in_the_vocabulary_at_all_is_rejected()
     {
-        // DebtDueSoon needs the DebtIn entity, which is Phase 6 work, so it cannot
-        // be adjusted yet even though the name already exists in the vocabulary.
-        var input = new UpdateAlertPreferenceInput("DebtDueSoon", true, null, null);
+        // As of Phase 7 every kind in the documented NotificationKind vocabulary is
+        // finally adjustable, so this test now covers a made-up kind instead of a
+        // real one from a later phase, there is no "later phase" kind left.
+        var input = new UpdateAlertPreferenceInput("SomethingThatDoesNotExist", true, null, null);
         _validator.Validate(input).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void The_phase_six_people_and_money_kinds_are_accepted()
+    {
+        _validator.Validate(new UpdateAlertPreferenceInput("DebtDueSoon", true, null, 3)).IsValid.Should().BeTrue();
+        _validator.Validate(new UpdateAlertPreferenceInput("DebtOverdue", true, null, null)).IsValid.Should().BeTrue();
+        _validator.Validate(new UpdateAlertPreferenceInput("LoanReturnDueSoon", true, null, 3)).IsValid.Should().BeTrue();
+        _validator.Validate(new UpdateAlertPreferenceInput("LoanOverdue", true, null, null)).IsValid.Should().BeTrue();
+        _validator.Validate(new UpdateAlertPreferenceInput("PromiseReminder", true, null, null)).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void The_phase_seven_recurring_item_kind_is_now_accepted()
+    {
+        var input = new UpdateAlertPreferenceInput("RecurringItemDue", true, null, null);
+        _validator.Validate(input).IsValid.Should().BeTrue();
     }
 
     [Fact]

@@ -35,6 +35,18 @@ public class DomainExceptionMiddleware
                 errors = ex.Errors,
             });
         }
+        catch (UpgradeRequiredException ex)
+        {
+            _logger.LogInformation("Request needs an entitlement the account does not have: {Message}", ex.Message);
+            context.Response.StatusCode = ex.StatusCode;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                type = "https://natoshare.example.com/errors/upgrade-required",
+                title = ex.Message,
+                status = ex.StatusCode,
+                detail = ex.Message,
+            });
+        }
         catch (DomainException ex)
         {
             _logger.LogInformation(ex, "Request failed a domain rule");

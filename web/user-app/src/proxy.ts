@@ -6,7 +6,10 @@ const AUTH_ONLY_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-passw
 
 // The pages that need a login. Whether onboarding itself is finished is checked inside
 // the page, not here, the cookie only tells us "someone is logged in on this device".
-const LOGIN_REQUIRED_ROUTES = ["/onboarding", "/categories", "/dashboard", "/notifications", "/close-month"];
+const LOGIN_REQUIRED_ROUTES = [
+  "/onboarding", "/categories", "/dashboard", "/notifications", "/close-month",
+  "/people-money", "/investments", "/obligations", "/recurring", "/reports",
+];
 
 // This runs before a page loads, so we can send a logged-in user away from the login
 // page, and send a logged-out visitor away from pages that need an account, without a
@@ -29,5 +32,6 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/login", "/signup", "/forgot-password", "/reset-password", "/onboarding", "/categories", "/dashboard", "/notifications", "/close-month",
+    "/people-money", "/investments", "/obligations", "/recurring", "/reports",
   ],
 };

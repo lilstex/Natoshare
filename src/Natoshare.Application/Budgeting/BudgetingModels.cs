@@ -13,7 +13,8 @@ public record CategoryDto(
     IReadOnlyList<string> SubCategories,
     int SortOrder,
     bool IsArchived,
-    decimal? CurrentPercentage);
+    decimal? CurrentPercentage,
+    bool IsLocked);
 
 public record CreateCategoryRequest(string Name, string Kind, string? ExternalAccountLabel, List<string>? SubCategories);
 

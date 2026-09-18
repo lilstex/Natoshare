@@ -44,4 +44,13 @@ public enum SourceTxnType
     // separate from MonthClose means reopening a month only undoes what closing IT
     // posted, never the carry-in it received when it first opened.
     MonthOpen,
+
+    // Lending money out is its own action, separate from getting it back
+    // (LoanRepayment already exists for that side), so each can be reversed on its
+    // own without touching the other.
+    LoanDisbursement,
+
+    // Paying back money the user borrowed. Kept separate from LoanRepayment because
+    // that one means the opposite direction, money coming back from a LoanOut.
+    DebtRepayment,
 }

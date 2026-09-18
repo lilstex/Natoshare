@@ -132,7 +132,8 @@ public record CategoryBalanceDto(
     decimal SavingsBalance,
     decimal DeployedBalance,
     PaceDto Pace,
-    SafeToSpendDto SafeToSpend);
+    SafeToSpendDto SafeToSpend,
+    bool IsLocked);
 
 public record FlexiblePoolDto(decimal Balance);
 

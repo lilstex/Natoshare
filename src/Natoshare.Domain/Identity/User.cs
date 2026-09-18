@@ -33,5 +33,9 @@ public class User : IdentityUser<Guid>
     // Set once the user finishes the onboarding wizard in Phase 2. Stays null until then.
     public DateTimeOffset? OnboardingCompletedAt { get; set; }
 
+    // Set the moment DELETE /me moves this account to PendingDeletion, so
+    // PurgePendingDeletions knows when the grace period is actually over.
+    public DateTimeOffset? PendingDeletionRequestedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }

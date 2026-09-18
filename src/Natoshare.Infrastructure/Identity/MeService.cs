@@ -106,6 +106,7 @@ public class MeService : IMeService
         }
 
         user.Status = UserStatus.PendingDeletion;
+        user.PendingDeletionRequestedAt = _clock.UtcNow;
         await _userManager.UpdateAsync(user);
 
         // Sign this account out everywhere right away, they should not have to wait

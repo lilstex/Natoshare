@@ -49,6 +49,21 @@ export function SiteHeader() {
           <Link href="/categories" className="text-sm font-medium text-muted hover:text-text">
             Categories
           </Link>
+          <Link href="/people-money" className="text-sm font-medium text-muted hover:text-text">
+            Loans & debts
+          </Link>
+          <Link href="/investments" className="text-sm font-medium text-muted hover:text-text">
+            Investments
+          </Link>
+          <Link href="/recurring" className="text-sm font-medium text-muted hover:text-text">
+            Recurring
+          </Link>
+          <Link href="/reports" className="text-sm font-medium text-muted hover:text-text">
+            Reports
+          </Link>
+          <Link href="/plans" className="text-sm font-medium text-muted hover:text-text">
+            Plans
+          </Link>
           <NotificationBell accessToken={accessToken} />
           <span className="text-sm text-muted">
             Hi, <span className="font-semibold text-text">{user.displayName}</span>
@@ -63,6 +78,9 @@ export function SiteHeader() {
         </nav>
       ) : (
         <nav className="flex items-center gap-3">
+          <Link href="/plans" className="text-sm font-medium text-muted hover:text-text">
+            Plans
+          </Link>
           <Link href="/login" className="text-sm font-medium text-muted">
             Log in
           </Link>

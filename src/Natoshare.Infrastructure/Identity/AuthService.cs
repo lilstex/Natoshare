@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Natoshare.Application.Admin;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Common;
 using Natoshare.Domain.Budgeting;
@@ -25,6 +26,7 @@ public class AuthService : IAuthService
     private readonly IAuditLogger _auditLogger;
     private readonly AppDefaults _defaults;
     private readonly IHostEnvironment _environment;
+    private readonly ISystemSettingsService _systemSettingsService;
 
     public AuthService(
         UserManager<User> userManager,
@@ -33,7 +35,8 @@ public class AuthService : IAuthService
         IClock clock,
         IAuditLogger auditLogger,
         IOptions<AppDefaults> defaults,
-        IHostEnvironment environment)
+        IHostEnvironment environment,
+        ISystemSettingsService systemSettingsService)
     {
         _userManager = userManager;
         _dbContext = dbContext;
@@ -42,6 +45,7 @@ public class AuthService : IAuthService
         _auditLogger = auditLogger;
         _defaults = defaults.Value;
         _environment = environment;
+        _systemSettingsService = systemSettingsService;
     }
 
     public async Task<AuthResult> SignupAsync(SignupRequest request, string? ip, CancellationToken cancellationToken = default)
@@ -53,6 +57,7 @@ public class AuthService : IAuthService
         }
 
         var now = _clock.UtcNow;
+        var trialDays = await _systemSettingsService.GetTrialDaysAsync(cancellationToken);
         var user = new User
         {
             Id = Guid.CreateVersion7(),
@@ -63,7 +68,7 @@ public class AuthService : IAuthService
             CurrencySymbol = _defaults.DefaultCurrencySymbol,
             TimeZoneId = _defaults.DefaultTimeZone,
             Locale = _defaults.DefaultLocale,
-            TrialEndsAt = now.AddDays(_defaults.TrialDays),
+            TrialEndsAt = now.AddDays(trialDays),
             CreatedAt = now,
         };
 
@@ -79,7 +84,7 @@ public class AuthService : IAuthService
 
         var result = await IssueTokensAsync(user, DefaultRole, ip, cancellationToken);
 
-        await _auditLogger.LogAsync(user.Id, DefaultRole, "UserSignedUp", "User", user.Id.ToString(), ip, null, cancellationToken);
+        await _auditLogger.LogAsync(user.Id, DefaultRole, "UserSignedUp", "User", user.Id.ToString(), ip, null, cancellationToken: cancellationToken);
 
         return result;
     }
@@ -100,7 +105,7 @@ public class AuthService : IAuthService
         var role = await _userManager.GetPrimaryRoleAsync(user);
         var result = await IssueTokensAsync(user, role, ip, cancellationToken);
 
-        await _auditLogger.LogAsync(user.Id, role, "UserLoggedIn", "User", user.Id.ToString(), ip, null, cancellationToken);
+        await _auditLogger.LogAsync(user.Id, role, "UserLoggedIn", "User", user.Id.ToString(), ip, null, cancellationToken: cancellationToken);
 
         return result;
     }
@@ -163,7 +168,7 @@ public class AuthService : IAuthService
         stored.RevokedAt = _clock.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        await _auditLogger.LogAsync(stored.UserId, "User", "UserLoggedOut", "User", stored.UserId.ToString(), null, null, cancellationToken);
+        await _auditLogger.LogAsync(stored.UserId, "User", "UserLoggedOut", "User", stored.UserId.ToString(), null, null, cancellationToken: cancellationToken);
     }
 
     public async Task<string?> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
@@ -189,12 +194,37 @@ public class AuthService : IAuthService
         });
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await _auditLogger.LogAsync(user.Id, "User", "PasswordResetRequested", "User", user.Id.ToString(), null, null, cancellationToken);
+        await _auditLogger.LogAsync(user.Id, "User", "PasswordResetRequested", "User", user.Id.ToString(), null, null, cancellationToken: cancellationToken);
 
         // There is no email system yet, see docs/01-domain-model.md. In development we
         // hand the raw code straight back so the flow can be tested end to end. In
         // production nobody gets it here, an admin looks it up instead (Phase 10).
         return _environment.IsProduction() ? null : rawToken;
+    }
+
+    public async Task<string> AdminGeneratePasswordResetTokenAsync(Guid userId, Guid adminUserId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString())
+            ?? throw new NotFoundException("We could not find that user.");
+
+        var rawToken = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(16));
+        var now = _clock.UtcNow;
+
+        _dbContext.PasswordResetTokens.Add(new PasswordResetToken
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = user.Id,
+            TokenHash = _tokenService.Hash(rawToken),
+            ExpiresAt = now.AddHours(1),
+            CreatedAt = now,
+        });
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _auditLogger.LogAsync(
+            adminUserId, "Admin", "AdminResetPasswordTriggered", "User", user.Id.ToString(), null, null,
+            cancellationToken: cancellationToken);
+
+        return rawToken;
     }
 
     public async Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
@@ -232,7 +262,7 @@ public class AuthService : IAuthService
         storedToken.UsedAt = now;
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        await _auditLogger.LogAsync(user.Id, "User", "PasswordResetCompleted", "User", user.Id.ToString(), null, null, cancellationToken);
+        await _auditLogger.LogAsync(user.Id, "User", "PasswordResetCompleted", "User", user.Id.ToString(), null, null, cancellationToken: cancellationToken);
     }
 
     public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
@@ -246,7 +276,7 @@ public class AuthService : IAuthService
             throw ToValidationException(result);
         }
 
-        await _auditLogger.LogAsync(user.Id, "User", "PasswordChanged", "User", user.Id.ToString(), null, null, cancellationToken);
+        await _auditLogger.LogAsync(user.Id, "User", "PasswordChanged", "User", user.Id.ToString(), null, null, cancellationToken: cancellationToken);
     }
 
     // Gives a brand new account the default set of categories (Rent, Feeding, and so

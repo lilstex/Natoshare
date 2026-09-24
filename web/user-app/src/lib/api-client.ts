@@ -1,3 +1,5 @@
+import { useAuthStore } from "@/store/auth-store";
+
 // Exported so a page that needs a plain, non-fetch URL (like a report export a
 // browser downloads directly with window.open) can build one against the same base.
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api/v1";
@@ -44,6 +46,30 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   const data = text ? JSON.parse(text) : undefined;
 
   if (!response.ok) {
+    // A 401 on a call that sent a token means the session itself is no good
+    // anymore (expired, or revoked by a logout elsewhere), not "bad input", so
+    // there is nothing a form on the current page can usefully do with it. A 401
+    // with no token, like a wrong password on /auth/login, is a completely
+    // different thing (bad credentials, not a dead session), and must not trigger
+    // this, or a failed login attempt would bounce someone off their own login
+    // form. `proxy.ts` stops most of this before a protected page even loads, but
+    // a token can still expire while someone is already sitting on one, this is
+    // what catches that: sign them out for real (clearing the store and the
+    // cookie proxy.ts reads) instead of leaving a stale "logged in" header up
+    // over a page that cannot actually load anything anymore.
+    if (response.status === 401 && options.token) {
+      useAuthStore.getState().clearSession();
+      if (typeof window !== "undefined") {
+        // A full reload, not router.push: this file is a plain module, not a
+        // component, so there is no router instance to call here. A hard
+        // navigation is also the right call anyway, it throws away every other
+        // component's in-memory state along with the dead session instead of
+        // leaving some of it behind for a client-side transition to trip over.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+        window.location.href = "/login";
+      }
+    }
+
     const message = data?.title ?? "Something went wrong. Please try again.";
     throw new ApiError(response.status, message, data?.errors);
   }

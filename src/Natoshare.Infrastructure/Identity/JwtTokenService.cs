@@ -58,6 +58,31 @@ public class JwtTokenService : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    public string CreateHangfireDashboardToken(Guid userId)
+    {
+        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SigningKey));
+        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+
+        // Deliberately no ClaimTypes.Role here, see the interface comment: this
+        // token must not work as a general Admin bearer token if it leaks.
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new("purpose", "hangfire-dashboard"),
+        };
+
+        var now = _clock.UtcNow;
+        var token = new JwtSecurityToken(
+            issuer: _settings.Issuer,
+            audience: _settings.Audience,
+            claims: claims,
+            notBefore: now.UtcDateTime,
+            expires: now.AddMinutes(2).UtcDateTime,
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
     public NewRefreshToken CreateRefreshToken()
     {
         // A long random string nobody could guess. We hand this raw value to the

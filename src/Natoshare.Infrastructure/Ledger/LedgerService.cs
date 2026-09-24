@@ -97,4 +97,33 @@ public class LedgerService : ILedgerService
         var balance = entries.Sum(e => e.Direction == LedgerDirection.Credit ? e.Amount.Amount : -e.Amount.Amount);
         return new Money(Math.Max(0m, balance));
     }
+
+    public async Task<IReadOnlyDictionary<AccountRef, Money>> GetAccountBalancesAsync(
+        Guid userId, IReadOnlyList<AccountRef> accounts, CancellationToken cancellationToken = default)
+    {
+        if (accounts.Count == 0)
+        {
+            return new Dictionary<AccountRef, Money>();
+        }
+
+        var kinds = accounts.Select(a => a.Kind).Distinct().ToList();
+        var categoryIds = accounts.Where(a => a.CategoryId.HasValue).Select(a => a.CategoryId!.Value).Distinct().ToList();
+
+        // One query for every account asked for, instead of one query per account.
+        // AccountCategoryId is null only for FlexiblePool, so a row with a null
+        // AccountCategoryId always belongs here if its Kind was asked for.
+        var rows = await _dbContext.LedgerEntries
+            .Where(e => e.UserId == userId && kinds.Contains(e.Account)
+                && (e.AccountCategoryId == null || categoryIds.Contains(e.AccountCategoryId.Value)))
+            .Select(e => new { e.Account, e.AccountCategoryId, e.Amount, e.Direction })
+            .ToListAsync(cancellationToken);
+
+        var sums = rows
+            .GroupBy(r => AccountRef.Of(r.Account, r.AccountCategoryId))
+            .ToDictionary(
+                g => g.Key,
+                g => new Money(Math.Max(0m, g.Sum(e => e.Direction == LedgerDirection.Credit ? e.Amount.Amount : -e.Amount.Amount))));
+
+        return accounts.Distinct().ToDictionary(a => a, a => sums.GetValueOrDefault(a, Money.Zero));
+    }
 }

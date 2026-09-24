@@ -848,3 +848,158 @@ export type UpgradeResult = {
   status: string;
   message: string;
 };
+
+// --- Phase 10: admin app ------------------------------------------------------------------
+
+export type UserStatusName = "Active" | "Suspended" | "PendingDeletion";
+
+export type AdminUserListItem = {
+  id: string;
+  email: string;
+  displayName: string;
+  status: UserStatusName;
+  role: string;
+  plan: PlanName;
+  isTrial: boolean;
+  createdAt: string;
+};
+
+export type AdminUserListResult = {
+  items: AdminUserListItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
+
+export type AdminAuditEvent = {
+  id: string;
+  actorUserId: string | null;
+  actorRole: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  before: string | null;
+  after: string | null;
+  ip: string | null;
+  createdAt: string;
+};
+
+export type AdminUserDetail = {
+  id: string;
+  email: string;
+  displayName: string;
+  status: UserStatusName;
+  role: string;
+  timeZoneId: string;
+  currencyCode: string;
+  createdAt: string;
+  trialEndsAt: string;
+  onboardingCompletedAt: string | null;
+  entitlements: PlanEntitlements;
+  currentMonth: {
+    month: { year: number; month: number; status: string };
+    categories: Array<{ categoryId: string; name: string; allocated: MoneyAmount; spent: MoneyAmount; available: MoneyAmount; deficit: MoneyAmount }>;
+    flexiblePool: { balance: MoneyAmount };
+    totals: { allocated: MoneyAmount; spent: MoneyAmount; available: MoneyAmount; deficit: MoneyAmount; savedToDate: MoneyAmount };
+  };
+  subscriptionHistory: SubscriptionRecord[];
+  recentActivity: AdminAuditEvent[];
+  deficitResolutionCount: number;
+  configVersionCount: number;
+  unreadNotificationCount: number;
+  alertPreferenceCount: number;
+};
+
+export type AdminSubscriptionRecord = SubscriptionRecord & {
+  userId: string;
+  userEmail: string;
+  userDisplayName: string;
+};
+
+export type AdminAuditSearchResult = {
+  items: AdminAuditEvent[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
+
+export type AdminPlanConfig = {
+  plan: PlanName;
+  maxCategories: number | null;
+  historyWindowDays: number | null;
+  sinkingFund: boolean;
+  deficitCoverFromSavings: boolean;
+  recurring: boolean;
+  export: boolean;
+};
+
+export type AdminFeatureFlag = {
+  key: string;
+  enabled: boolean;
+};
+
+export type SystemSetting = {
+  key: string;
+  value: string;
+  updatedAt: string;
+};
+
+export type AdminMetrics = {
+  totalUsers: number;
+  signupsLast7Days: number;
+  signupsLast30Days: number;
+  activeUsersLast30Days: number;
+  trialUsers: number;
+  proUsers: number;
+  suspendedUsers: number;
+  pendingSubscriptions: number;
+  monthCloseRateLast30Days: number;
+};
+
+export type AdminHealth = {
+  databaseStatus: string;
+  hangfireStatus: string;
+  checkedAt: string;
+};
+
+export type AdminFailedJob = {
+  jobId: string;
+  jobName: string;
+  exceptionMessage: string | null;
+  failedAt: string | null;
+};
+
+export type AdminJobs = {
+  enqueuedCount: number;
+  processingCount: number;
+  succeededCount: number;
+  failedCount: number;
+  recentFailures: AdminFailedJob[];
+};
+
+export type IntegrityCheckStatus = {
+  lastRanAt: string | null;
+  lastCheckedCount: number | null;
+  lastDriftCount: number | null;
+};
+
+export type AdminErrorLogEntry = {
+  timestamp: string;
+  level: string;
+  message: string;
+  exception: string | null;
+};
+
+export type RecomputeDiffItem = {
+  categoryId: string;
+  categoryName: string;
+  storedSpent: number;
+  recomputedSpent: number;
+  hasDrift: boolean;
+};
+
+export type RecomputeBalancesResult = {
+  year: number;
+  month: number;
+  diffs: RecomputeDiffItem[];
+};

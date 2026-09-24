@@ -273,7 +273,7 @@ public class MonthLifecycleService : IMonthLifecycleService
         await transaction.CommitAsync(cancellationToken);
 
         await NotifyMonthEndSummaryAsync(user, budgetMonth, cancellationToken);
-        await _auditLogger.LogAsync(userId, "User", "MonthClosed", "BudgetMonth", budgetMonth.Id.ToString(), null, null, cancellationToken);
+        await _auditLogger.LogAsync(userId, "User", "MonthClosed", "BudgetMonth", budgetMonth.Id.ToString(), null, null, cancellationToken: cancellationToken);
 
         return new CloseMonthResult(
             year, month, budgetMonth.Status.ToString(), budgetMonth.ClosedAt.Value,
@@ -314,7 +314,7 @@ public class MonthLifecycleService : IMonthLifecycleService
         budgetMonth.ClosedByUserId = null;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await _auditLogger.LogAsync(adminUserId, "Admin", "MonthReopened", "BudgetMonth", budgetMonth.Id.ToString(), null, null, cancellationToken);
+        await _auditLogger.LogAsync(adminUserId, "Admin", "MonthReopened", "BudgetMonth", budgetMonth.Id.ToString(), null, null, cancellationToken: cancellationToken);
     }
 
     public async Task EvaluateCloseRemindersAsync(CancellationToken cancellationToken = default)

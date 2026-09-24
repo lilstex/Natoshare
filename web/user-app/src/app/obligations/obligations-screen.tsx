@@ -54,7 +54,7 @@ export function ObligationsScreen() {
     <div>
       <SiteHeader />
 
-      <main className="mx-auto max-w-3xl px-4 pb-16">
+      <main className="px-4 pb-16 pt-6 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
         <h1 className="text-2xl font-bold text-text">Obligations, next 30 days</h1>
 
         {error && <p className="mt-4 rounded-xl bg-danger-tint px-3.5 py-2.5 text-sm text-danger">{error}</p>}
@@ -66,7 +66,7 @@ export function ObligationsScreen() {
         ) : (
           <div className="mt-5 flex flex-col gap-2">
             {items.map((item, index) => (
-              <div key={index} className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3">
+              <div key={index} className="flex items-center justify-between rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint px-4 py-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_STYLES[item.severity]}`}>

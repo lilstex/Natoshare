@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="heroBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="60" />
+    </filter>
+    <radialGradient id="blobPurple" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6D4AE0" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#6D4AE0" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="blobBlue" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4C6FE8" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#4C6FE8" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="blobGold" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F4B740" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#F4B740" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="dotGrid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.6" fill="#D4CFE7" fill-opacity="0.5" />
+    </pattern>
+  </defs>
+
+  <!-- keep this white/bright, the feedback that started this file was "too dark",
+       so the hero background stays soft and light, never a dark or busy image -->
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF" />
+  <rect x="0" y="0" width="1600" height="900" fill="url(#dotGrid)" />
+
+  <g filter="url(#heroBlur)">
+    <circle cx="260" cy="180" r="280" fill="url(#blobPurple)" />
+    <circle cx="1360" cy="220" r="320" fill="url(#blobBlue)" />
+    <circle cx="800" cy="760" r="360" fill="url(#blobGold)" />
+    <circle cx="1300" cy="740" r="220" fill="url(#blobPurple)" />
+  </g>
+
+  <!-- a faint outline of the brand's "share" motif, echoing the N mark's diagonal
+       and dot, kept subtle so it reads as texture, not a competing logo -->
+  <g opacity="0.06" stroke="#1B1930" stroke-width="3" fill="none">
+    <path d="M120 620 L120 760 L280 600 L280 760" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="280" cy="600" r="10" fill="#1B1930" stroke="none" />
+  </g>
+  <g opacity="0.05" stroke="#1B1930" stroke-width="3" fill="none">
+    <path d="M1300 120 L1300 220 L1420 100 L1420 220" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="1420" cy="100" r="9" fill="#1B1930" stroke="none" />
+  </g>
+</svg>

@@ -19,4 +19,10 @@ public interface IAuthService
     Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default);
 
     Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
+
+    // An admin triggering a reset on someone's behalf (Phase 10), for when a user is
+    // locked out and cannot use the normal ForgotPassword flow themselves. Unlike
+    // ForgotPasswordAsync, this always hands back the raw token, an admin is trusted
+    // to pass it on to the user through whatever support channel they used to ask.
+    Task<string> AdminGeneratePasswordResetTokenAsync(Guid userId, Guid adminUserId, CancellationToken cancellationToken = default);
 }

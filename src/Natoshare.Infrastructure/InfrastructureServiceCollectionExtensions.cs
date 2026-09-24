@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Natoshare.Application.Admin;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Budgeting;
 using Natoshare.Application.Common;
@@ -17,6 +18,7 @@ using Natoshare.Application.Planning;
 using Natoshare.Application.Reports;
 using Natoshare.Application.Subscriptions;
 using Natoshare.Domain.Identity;
+using Natoshare.Infrastructure.Admin;
 using Natoshare.Infrastructure.Audit;
 using Natoshare.Infrastructure.Budgeting;
 using Natoshare.Infrastructure.Dashboard;
@@ -142,6 +144,15 @@ public static class InfrastructureServiceCollectionExtensions
         // Phase 7 for recurring items, this is where the real Free/Pro/trial logic
         // behind them finally lives.
         services.AddScoped<ISubscriptionService, SubscriptionService>();
+
+        // The admin app (Phase 10): read-first user management, audit log, plan and
+        // feature flag tuning, settings, and monitoring, see docs/04-admin-app.md.
+        services.AddScoped<ISystemSettingsService, SystemSettingsService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
+        services.AddScoped<IAdminAuditService, AdminAuditService>();
+        services.AddScoped<IAdminPlanService, AdminPlanService>();
+        services.AddScoped<IAdminFeatureFlagService, AdminFeatureFlagService>();
+        services.AddScoped<IAdminMonitoringService, AdminMonitoringService>();
 
         return services;
     }

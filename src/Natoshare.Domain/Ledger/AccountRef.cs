@@ -20,4 +20,10 @@ public readonly record struct AccountRef
     public static AccountRef External(Guid categoryId) => new(AccountKind.External, categoryId);
 
     public static AccountRef FlexiblePool() => new(AccountKind.FlexiblePool, null);
+
+    // Rebuilds an AccountRef from the raw Kind/CategoryId a ledger row already
+    // carries, for code (like a batch balance lookup) that reads rows straight out
+    // of the database instead of building an AccountRef through one of the named
+    // factories above.
+    public static AccountRef Of(AccountKind kind, Guid? categoryId) => new(kind, categoryId);
 }

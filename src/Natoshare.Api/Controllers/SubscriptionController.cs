@@ -58,4 +58,16 @@ public class SubscriptionController : ApiControllerBase
         await _subscriptionService.ActivateAsync(_currentUser.UserId, reference, request, cancellationToken);
         return NoContent();
     }
+
+    // The admin app's subscriptions queue (docs/04-admin-app.md section 2.3), for
+    // example GET /admin/subscriptions?status=pending to see what still needs
+    // activating.
+    [HttpGet("/api/v1/admin/subscriptions")]
+    [Authorize(Policy = "RequireAdmin")]
+    public async Task<ActionResult<IReadOnlyList<AdminSubscriptionRecordDto>>> ListForAdmin(
+        [FromQuery] string? status, CancellationToken cancellationToken)
+    {
+        var result = await _subscriptionService.ListAsync(status, cancellationToken);
+        return Ok(result);
+    }
 }

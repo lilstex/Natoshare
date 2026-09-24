@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { AuthCard } from "@/components/auth-card";
 import { Button } from "@/components/ui/button";
+import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
@@ -74,7 +75,7 @@ export function LoginForm() {
       footer={
         <>
           New to Natoshare?{" "}
-          <Link href="/signup" className="font-semibold text-primary">
+          <Link href="/signup" className="font-semibold text-primary transition-colors hover:text-primary-strong">
             Create an account
           </Link>
         </>
@@ -90,10 +91,9 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <TextField
+        <PasswordField
           id="password"
           label="Password"
-          type="password"
           autoComplete="current-password"
           required
           value={password}
@@ -101,7 +101,7 @@ export function LoginForm() {
         />
 
         <div className="text-right text-sm">
-          <Link href="/forgot-password" className="font-medium text-primary">
+          <Link href="/forgot-password" className="font-medium text-primary transition-colors hover:text-primary-strong">
             Forgot your password?
           </Link>
         </div>

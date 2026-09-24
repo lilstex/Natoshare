@@ -21,4 +21,10 @@ public interface IMaintenanceJobs
     // had drift, so a test can inject a deliberate mismatch and assert on it
     // directly instead of having to intercept a log line.
     Task<int> RunLedgerIntegrityCheckAsync(CancellationToken cancellationToken = default);
+
+    // Same deletion the nightly PurgePendingDeletions job does for someone whose
+    // grace period is over, but run right now for one specific user. Used by the
+    // admin app's hard-delete action (Phase 10), which does not want to wait for the
+    // grace period, the admin has already confirmed this is final.
+    Task PurgeUserImmediatelyAsync(Guid userId, CancellationToken cancellationToken = default);
 }

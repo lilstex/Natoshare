@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { AuthCard } from "@/components/auth-card";
 import { Button } from "@/components/ui/button";
+import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
 import { apiFetch, ApiError } from "@/lib/api-client";
 
@@ -50,7 +51,7 @@ export function ResetPasswordForm({ initialEmail, initialToken }: ResetPasswordF
       title="Set a new password"
       description="Enter the code you were given, along with a new password."
       footer={
-        <Link href="/login" className="font-semibold text-primary">
+        <Link href="/login" className="font-semibold text-primary transition-colors hover:text-primary-strong">
           Back to login
         </Link>
       }
@@ -72,10 +73,9 @@ export function ResetPasswordForm({ initialEmail, initialToken }: ResetPasswordF
           value={resetToken}
           onChange={(e) => setResetToken(e.target.value)}
         />
-        <TextField
+        <PasswordField
           id="newPassword"
           label="New password"
-          type="password"
           autoComplete="new-password"
           required
           value={newPassword}

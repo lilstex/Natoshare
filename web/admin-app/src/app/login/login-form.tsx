@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
@@ -18,8 +19,17 @@ type LoginResponse = {
 // The only screen this app has for now. The real admin screens (users, audit log,
 // monitoring, and so on) get built in Phase 10, this just proves an admin can log in.
 export function LoginForm() {
+  const router = useRouter();
   const setSession = useAdminAuthStore((state) => state.setSession);
   const user = useAdminAuthStore((state) => state.user);
+
+  // Already logged in (either just now, or from an earlier visit once the
+  // persisted session rehydrates) goes straight to the real admin screens.
+  useEffect(() => {
+    if (user) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,13 +65,8 @@ export function LoginForm() {
 
   if (user) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg px-4 text-center">
-        <BrandMark size={56} />
-        <h1 className="text-2xl font-bold text-text">Welcome, {user.displayName}</h1>
-        <p className="max-w-sm text-sm text-muted">
-          You are logged in. The real admin screens (users, audit log, monitoring) are coming in Phase
-          10.
-        </p>
+      <main className="flex min-h-screen items-center justify-center bg-bg">
+        <p className="text-sm text-muted">Redirecting…</p>
       </main>
     );
   }

@@ -14,6 +14,15 @@ public interface ITokenService
     // every time.
     string CreateAccessToken(User user, string role);
 
+    // A minimal, short-lived token good for exactly one thing: opening the Hangfire
+    // dashboard link (see AdminOnlyDashboardAuthFilter). It carries no role claim,
+    // so even if it leaked (browser history, a proxy's access log, a same-origin
+    // Referer header, all real risks for a token that has to live in a URL since a
+    // plain <a href> cannot carry an Authorization header), it fails every other
+    // Admin-gated endpoint's role check instead of acting as a spare full session
+    // token. A Phase 11 security-review fix, see 05-implementation-phases.md.
+    string CreateHangfireDashboardToken(Guid userId);
+
     NewRefreshToken CreateRefreshToken();
 
     // Turns a raw token into the same hash we save in the database, so we can look a

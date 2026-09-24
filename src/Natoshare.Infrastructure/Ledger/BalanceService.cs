@@ -36,13 +36,22 @@ public class BalanceService : IBalanceService
         var snapshot = await _budgetMonthService.GetSnapshotAsync(userId, today.Year, today.Month, cancellationToken);
         var lockedCategoryIds = await _entitlementService.GetLockedCategoryIdsAsync(userId, cancellationToken);
 
+        // One query for every category's savings and external balance, instead of
+        // two queries per category in a loop (a real N+1 found during Phase 11's
+        // performance pass, since this is exactly what /dashboard also calls into).
+        var accountsToLoad = snapshot.Categories
+            .SelectMany(c => new[] { AccountRef.CategorySavings(c.CategoryId), AccountRef.External(c.CategoryId) })
+            .Append(AccountRef.FlexiblePool())
+            .ToList();
+        var accountBalances = await _ledgerService.GetAccountBalancesAsync(userId, accountsToLoad, cancellationToken);
+
         var categories = new List<CategoryBalanceDto>();
         foreach (var c in snapshot.Categories)
         {
             var categoryMonth = c.ToCategoryMonth();
 
-            var savingsBalance = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.CategorySavings(c.CategoryId), cancellationToken);
-            var deployedBalance = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.External(c.CategoryId), cancellationToken);
+            var savingsBalance = accountBalances[AccountRef.CategorySavings(c.CategoryId)];
+            var deployedBalance = accountBalances[AccountRef.External(c.CategoryId)];
             var pace = PacingCalculator.Compute(categoryMonth, today.Year, today.Month, today);
 
             categories.Add(new CategoryBalanceDto(
@@ -64,7 +73,7 @@ public class BalanceService : IBalanceService
                 lockedCategoryIds.Contains(c.CategoryId)));
         }
 
-        var poolBalance = await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.FlexiblePool(), cancellationToken);
+        var poolBalance = accountBalances[AccountRef.FlexiblePool()];
 
         // "Saved to date" only ever grows once a month actually closes and rolls
         // surplus into savings (Phase 5), until then there is nothing saved yet.

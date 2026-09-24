@@ -162,7 +162,7 @@ public class DeficitService : IDeficitService
         _dbContext.DeficitResolutions.Add(resolution);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        await _auditLogger.LogAsync(userId, "User", "DeficitResolved", "DeficitResolution", resolution.Id.ToString(), null, null, cancellationToken);
+        await _auditLogger.LogAsync(userId, "User", "DeficitResolved", "DeficitResolution", resolution.Id.ToString(), null, null, cancellationToken: cancellationToken);
 
         return ToDto(resolution);
     }

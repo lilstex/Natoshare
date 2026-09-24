@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Natoshare.Domain.Admin;
 using Natoshare.Domain.Audit;
 using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Common;
@@ -91,6 +92,10 @@ public class NatoshareDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gu
     public DbSet<PlanConfig> PlanConfigs => Set<PlanConfig>();
 
     public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();
+
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+
+    public DbSet<IntegrityCheckRun> IntegrityCheckRuns => Set<IntegrityCheckRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

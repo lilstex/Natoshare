@@ -99,7 +99,28 @@ public class SubscriptionService : ISubscriptionService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         await _auditLogger.LogAsync(
-            adminUserId, "Admin", "SubscriptionActivated", "SubscriptionRecord", record.Id.ToString(), null, null, cancellationToken);
+            adminUserId, "Admin", "SubscriptionActivated", "SubscriptionRecord", record.Id.ToString(), null, null,
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AdminSubscriptionRecordDto>> ListAsync(string? status, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.SubscriptionRecords.Join(
+            _dbContext.Users, s => s.UserId, u => u.Id,
+            (s, u) => new { Subscription = s, u.Email, u.DisplayName });
+
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<SubscriptionStatus>(status, ignoreCase: true, out var parsed))
+        {
+            query = query.Where(x => x.Subscription.Status == parsed);
+        }
+
+        var rows = await query.OrderByDescending(x => x.Subscription.RequestedAt).ToListAsync(cancellationToken);
+
+        return rows.Select(x => new AdminSubscriptionRecordDto(
+            x.Subscription.Id, x.Subscription.UserId, x.Email ?? string.Empty, x.DisplayName,
+            x.Subscription.Plan.ToString(), x.Subscription.BillingCycle.ToString(), x.Subscription.Status.ToString(),
+            x.Subscription.Reference, x.Subscription.RequestedAt, x.Subscription.ActivatedAt, x.Subscription.PeriodEnd))
+            .ToList();
     }
 
     private static SubscriptionRecordDto ToDto(SubscriptionRecord record) => new(

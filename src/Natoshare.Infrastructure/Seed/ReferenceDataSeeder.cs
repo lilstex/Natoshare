@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Natoshare.Domain.Admin;
 using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Subscriptions;
+using Natoshare.Infrastructure.Admin;
 using Natoshare.Infrastructure.Persistence;
 
 namespace Natoshare.Infrastructure.Seed;
@@ -15,6 +17,20 @@ public static class ReferenceDataSeeder
         await SeedBudgetTemplatesAsync(dbContext, cancellationToken);
         await SeedPlanConfigsAsync(dbContext, cancellationToken);
         await SeedFeatureFlagsAsync(dbContext, cancellationToken);
+        await SeedSystemSettingsAsync(dbContext, cancellationToken);
+    }
+
+    private static async Task SeedSystemSettingsAsync(NatoshareDbContext dbContext, CancellationToken cancellationToken)
+    {
+        if (await dbContext.SystemSettings.AnyAsync(cancellationToken))
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        dbContext.SystemSettings.Add(new SystemSetting { Key = SystemSettingsService.TrialDaysKey, Value = "30", UpdatedAt = now });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task SeedBudgetTemplatesAsync(NatoshareDbContext dbContext, CancellationToken cancellationToken)

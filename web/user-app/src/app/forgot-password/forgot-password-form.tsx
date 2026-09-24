@@ -49,7 +49,7 @@ export function ForgotPasswordForm() {
         title="If that account exists…"
         description="We do not want to say whether that email is registered, so this message is the same either way."
         footer={
-          <Link href="/login" className="font-semibold text-primary">
+          <Link href="/login" className="font-semibold text-primary transition-colors hover:text-primary-strong">
             Back to login
           </Link>
         }
@@ -89,7 +89,7 @@ export function ForgotPasswordForm() {
       title="Reset your password"
       description="Tell us your email and we will help you get back in."
       footer={
-        <Link href="/login" className="font-semibold text-primary">
+        <Link href="/login" className="font-semibold text-primary transition-colors hover:text-primary-strong">
           Back to login
         </Link>
       }

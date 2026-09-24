@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-// There is nothing to see at the root of the admin app yet, so we send people
-// straight to the login page. The real dashboard comes in Phase 10.
+// The dashboard's own AdminShell guard sends anyone not logged in straight to
+// /login, so it is always safe to point the bare root here.
 export default function Home() {
-  redirect("/login");
+  redirect("/dashboard");
 }

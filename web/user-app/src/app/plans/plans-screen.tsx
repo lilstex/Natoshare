@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { PlanEntitlements, SubscriptionStatus, UpgradeResult } from "@natoshare/shared-types";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
+import { CheckIcon, CloseIcon } from "@/components/ui/icons";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -22,6 +23,30 @@ const ROWS: { label: string; free: string; pro: string }[] = [
   { label: "Loans / debts / promises", free: "✓", pro: "✓" },
   { label: "Pacing, safe-to-spend, deficit tracking", free: "✓", pro: "✓" },
 ];
+
+// A cell that starts with "✓"/"✗" gets a real coloured icon instead of the plain
+// character, everything else (a number, "Full", "Basic (7 days)") stays plain text.
+function PlanCell({ value }: { value: string }) {
+  if (value.startsWith("✓")) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <CheckIcon size={16} className="text-success" />
+        {value.slice(1).trim()}
+      </span>
+    );
+  }
+
+  if (value.startsWith("✗")) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <CloseIcon size={13} className="text-subtle" />
+        {value.slice(1).trim()}
+      </span>
+    );
+  }
+
+  return <>{value}</>;
+}
 
 export function PlansScreen() {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -74,7 +99,7 @@ export function PlansScreen() {
     <div>
       <SiteHeader />
 
-      <main className="mx-auto max-w-4xl px-6 pb-24 pt-10">
+      <main className="px-4 pb-24 pt-10 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
         <div className="text-center">
           <h1 className="font-display text-3xl font-bold text-text sm:text-4xl">Simple pricing</h1>
           <p className="mt-3 text-lg text-muted">Every new account starts with a 30-day Pro trial, no card needed.</p>
@@ -86,7 +111,7 @@ export function PlansScreen() {
           </p>
         )}
 
-        <div className="mt-10 overflow-x-auto rounded-2xl border border-border bg-surface">
+        <div className="mt-10 overflow-x-auto rounded-2xl border border-border bg-gradient-to-br from-surface to-primary-tint">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left">
@@ -99,8 +124,12 @@ export function PlansScreen() {
               {ROWS.map((row) => (
                 <tr key={row.label} className="border-b border-border last:border-0">
                   <td className="px-5 py-3 text-text">{row.label}</td>
-                  <td className="px-5 py-3 text-muted">{row.free}</td>
-                  <td className="px-5 py-3 font-medium text-text">{row.pro}</td>
+                  <td className="px-5 py-3 text-muted">
+                    <PlanCell value={row.free} />
+                  </td>
+                  <td className="px-5 py-3 font-medium text-text">
+                    <PlanCell value={row.pro} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -113,7 +142,7 @@ export function PlansScreen() {
           {!user ? (
             <Link
               href="/signup"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-semibold text-white hover:bg-primary-strong"
+              className="inline-flex h-12 items-center justify-center rounded-md bg-gradient-to-r from-cta to-cta-hover px-8 text-base font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg hover:brightness-105"
             >
               Start your free trial
             </Link>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 960" role="img" aria-label="" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="authGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7A4BE6" />
+      <stop offset=".52" stop-color="#5B3AD1" />
+      <stop offset="1" stop-color="#4668DB" />
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="720" height="960" fill="url(#authGradient)" />
+
+  <!-- decorative circles, same rgba(255,255,255,.06) treatment as the hero money
+       card in docs/06-design-system.md section 5. These can sit near the true
+       edges, being cropped by object-cover on a narrow panel is fine for texture. -->
+  <circle cx="620" cy="140" r="180" fill="rgba(255,255,255,0.06)" />
+  <circle cx="80" cy="820" r="220" fill="rgba(255,255,255,0.06)" />
+  <circle cx="600" cy="760" r="90" fill="rgba(255,255,255,0.05)" />
+
+  <!-- Everything below carries real text, so it all stays centred on x=360 and
+       within roughly +/-170 of it. object-cover crops this panel symmetrically
+       around its centre, and the narrowest split-screen panel (right at the "md"
+       breakpoint, see docs/06-design-system.md section 4.1) only leaves about
+       +/-180 visible either side of centre, so nothing meaningful can hug an edge. -->
+
+  <g transform="translate(328,64)">
+    <path d="M32 3c13.2 0 18.6 1.2 23.1 5.9C59.8 13.4 61 18.8 61 32s-1.2 18.6-5.9 23.1C50.6 59.8 45.2 61 32 61S13.4 59.8 8.9 55.1C4.2 50.6 3 45.2 3 32S4.2 13.4 8.9 8.9 18.8 3 32 3Z" fill="rgba(255,255,255,0.16)" />
+    <path d="M21 45V19l22 26V19" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="45.5" cy="19.5" r="4.6" fill="#fff" />
+  </g>
+
+  <!-- floating mini dashboard card, hinting at the product without a literal
+       screenshot in this narrow panel -->
+  <rect x="190" y="380" width="340" height="150" rx="24" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)" />
+  <text x="360" y="416" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="1.2" fill="rgba(255,255,255,0.75)">NET POSITION</text>
+  <text x="360" y="454" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF">&#8358;2,142,300</text>
+  <text x="360" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.82)">Savings &#8358;1.62M &#183; Saved 70% this month</text>
+
+  <text x="360" y="608" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF">Split it. Track it.</text>
+  <text x="360" y="644" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF">Keep it.</text>
+  <text x="360" y="680" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.82)">Your income splits itself across your categories,</text>
+  <text x="360" y="702" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.82)">so you always know what's left, and what you saved.</text>
+</svg>

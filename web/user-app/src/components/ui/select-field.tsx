@@ -12,7 +12,7 @@ export function SelectField({ label, id, className = "", children, ...props }: S
       <span className="text-sm font-medium text-muted">{label}</span>
       <select
         id={id}
-        className={`h-11 rounded-xl border border-border-strong bg-surface px-3.5 text-[15px] text-text outline-none focus:border-primary focus:ring-4 focus:ring-primary-tint ${className}`}
+        className={`h-11 rounded-md border border-border-strong bg-surface px-3.5 text-[15px] text-text outline-none focus:border-primary focus:ring-4 focus:ring-primary-tint ${className}`}
         {...props}
       >
         {children}

@@ -33,6 +33,15 @@ public class NatoshareApiFactory : WebApplicationFactory<Program>, IAsyncLifetim
                 ["Jwt:SigningKey"] = "integration-test-signing-key-that-is-long-enough",
                 ["Seed:AdminEmail"] = "admin@natoshare.test",
                 ["Seed:AdminPassword"] = "NatoshareAdmin1",
+
+                // A real deployment keeps these tight (see Program.cs), but every
+                // test in this project shares one in-process "IP", and several
+                // test classes sign up or log in far more than a real attacker's
+                // limit allows within a minute. Rate limiting itself is not what
+                // these tests are checking, so it is raised out of the way here
+                // instead of loosened for everyone.
+                ["RateLimiting:GlobalPermitLimit"] = "100000",
+                ["RateLimiting:AuthPermitLimit"] = "100000",
             });
         });
     }

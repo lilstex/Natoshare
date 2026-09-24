@@ -14,6 +14,7 @@ import type {
 } from "@natoshare/shared-types";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
+import { RepeatIcon } from "@/components/ui/icons";
 import { SelectField } from "@/components/ui/select-field";
 import { TextField } from "@/components/ui/text-field";
 import { apiFetch, ApiError } from "@/lib/api-client";
@@ -111,11 +112,11 @@ export function RecurringItemsScreen() {
     <div>
       <SiteHeader />
 
-      <main className="mx-auto max-w-3xl px-4 pb-16">
-        <div className="flex items-center justify-between">
+      <main className="px-4 pb-16 pt-6 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-text">Recurring items</h1>
           {!needsUpgrade && (
-            <Button type="button" onClick={() => setShowForm((v) => !v)}>
+            <Button type="button" onClick={() => setShowForm((v) => !v)} className="w-full sm:w-auto">
               {showForm ? "Cancel" : "Add recurring item"}
             </Button>
           )}
@@ -124,7 +125,7 @@ export function RecurringItemsScreen() {
         {needsUpgrade && (
           <p className="mt-4 rounded-xl bg-warning-tint px-3.5 py-2.5 text-sm text-warning">
             Recurring items need an active Pro plan.{" "}
-            <Link href="/plans" className="font-semibold underline">
+            <Link href="/plans" className="font-semibold underline decoration-2 underline-offset-2 transition-opacity hover:opacity-75">
               See plans
             </Link>
             .
@@ -134,7 +135,7 @@ export function RecurringItemsScreen() {
         {error && <p className="mt-4 rounded-xl bg-danger-tint px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 
         {!needsUpgrade && committedTotal && (
-          <div className="mt-5 rounded-xl border border-border bg-surface p-4">
+          <div className="mt-5 rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4">
             <p className="text-xs font-medium text-muted">Committed subscriptions, per month</p>
             <p className="mt-1 font-display text-lg font-bold text-text">
               {formatMoney(committedTotal.monthlyExpenseTotal, accountLocale.currencyCode, accountLocale.locale)}
@@ -159,24 +160,37 @@ export function RecurringItemsScreen() {
             {isLoading ? (
               <p className="text-sm text-muted">Loading…</p>
             ) : items.length === 0 && !showForm ? (
-              <p className="text-sm text-muted">Nothing recurring set up yet.</p>
+              <p className="rounded-xl border border-dashed border-border-strong px-4 py-8 text-center text-sm text-muted">
+                Nothing recurring set up yet.
+              </p>
             ) : (
               items.map((item) => (
-                <div key={item.id} className="rounded-xl border border-border bg-surface p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-text">{item.description}</span>
+                <div key={item.id} className="rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4 shadow-sm transition-shadow hover:shadow-md">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                          item.kind === "Income" ? "bg-success-tint text-success" : "bg-danger-tint text-danger"
+                        }`}
+                      >
+                        <RepeatIcon size={17} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-text">{item.description}</p>
+                        <p className="truncate text-xs text-muted">
+                          {formatMoney(item.amount, accountLocale.currencyCode, accountLocale.locale)} · {item.kind} · {item.cadence} · {item.mode}
+                        </p>
+                      </div>
+                    </div>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                         item.isActive ? "bg-success-tint text-success" : "bg-surface-2 text-subtle"
                       }`}
                     >
                       {item.isActive ? "Active" : "Paused"}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-muted">
-                    {formatMoney(item.amount, accountLocale.currencyCode, accountLocale.locale)} · {item.kind} · {item.cadence} · {item.mode}
-                  </p>
-                  <p className="text-xs text-muted">
+                  <p className="mt-1.5 text-xs text-muted">
                     Next: {item.nextRunOn}
                     {item.lastPostedOn ? ` · last posted ${item.lastPostedOn}` : ""}
                   </p>
@@ -254,7 +268,7 @@ function NewRecurringItemForm({
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+    <div className="mt-4 rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4">
       <p className="text-sm font-semibold text-text">Add a recurring item</p>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <SelectField label="Kind" value={kind} onChange={(e) => setKind(e.target.value as RecurringItemKind)}>

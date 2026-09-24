@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Natoshare.Api.Validation;
 using Natoshare.Application.Auth;
 using Natoshare.Application.Common;
@@ -43,6 +44,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("signup")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult<AuthResult>> Signup(SignupRequest request, CancellationToken cancellationToken)
     {
         await _signupValidator.ValidateOrThrowAsync(request, cancellationToken);
@@ -52,6 +54,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult<AuthResult>> Login(LoginRequest request, CancellationToken cancellationToken)
     {
         await _loginValidator.ValidateOrThrowAsync(request, cancellationToken);
@@ -79,6 +82,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("forgot-password")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         await _forgotPasswordValidator.ValidateOrThrowAsync(request, cancellationToken);
@@ -92,6 +96,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("reset-password")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
     {
         await _resetPasswordValidator.ValidateOrThrowAsync(request, cancellationToken);

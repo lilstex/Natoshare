@@ -209,7 +209,7 @@ export function OnboardingWizard() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-bg px-4 py-12">
+    <main className="flex min-h-screen flex-col items-center bg-bg px-4 py-12 sm:px-6">
       <div className="flex items-center gap-2.5">
         <span className="font-display text-lg font-semibold text-text">Natoshare</span>
       </div>
@@ -219,7 +219,7 @@ export function OnboardingWizard() {
         <span className={`h-1.5 w-7 rounded-full ${step >= 2 ? "bg-primary" : "bg-surface-2"}`} />
       </div>
 
-      <div className="mt-6 w-full max-w-2xl rounded-[26px] border border-border bg-surface p-8 shadow-lg">
+      <div className="mt-6 w-full max-w-2xl rounded-[26px] border border-border bg-gradient-to-br from-surface to-primary-tint p-8 shadow-lg">
         {step === 1 ? (
           <>
             <p className="text-xs font-semibold tracking-wide text-subtle uppercase">Step 1 of 2</p>
@@ -255,7 +255,7 @@ export function OnboardingWizard() {
                   list="timezone-options"
                   value={timeZoneId}
                   onChange={(e) => setTimeZoneId(e.target.value)}
-                  className="h-11 rounded-xl border border-border-strong bg-surface px-3.5 text-[15px] text-text outline-none focus:border-primary focus:ring-4 focus:ring-primary-tint"
+                  className="h-11 rounded-md border border-border-strong bg-surface px-3.5 text-[15px] text-text outline-none focus:border-primary focus:ring-4 focus:ring-primary-tint"
                 />
                 <datalist id="timezone-options">
                   {timeZones.map((tz) => (
@@ -319,7 +319,7 @@ export function OnboardingWizard() {
                     key={template.id}
                     type="button"
                     onClick={() => pickTemplate(template)}
-                    className={`rounded-xl border px-3.5 py-2.5 text-left text-sm transition-colors ${
+                    className={`rounded-md border px-3.5 py-2.5 text-left text-sm transition-colors ${
                       selectedTemplateId === template.id
                         ? "border-primary bg-primary-tint"
                         : "border-border-strong bg-surface hover:bg-surface-2"
@@ -332,7 +332,7 @@ export function OnboardingWizard() {
                 <button
                   type="button"
                   onClick={startFromScratch}
-                  className={`rounded-xl border px-3.5 py-2.5 text-left text-sm transition-colors ${
+                  className={`rounded-md border px-3.5 py-2.5 text-left text-sm transition-colors ${
                     selectedTemplateId === null && rows.length > 0
                       ? "border-primary bg-primary-tint"
                       : "border-border-strong bg-surface hover:bg-surface-2"
@@ -355,39 +355,41 @@ export function OnboardingWizard() {
 
                 <div className="mt-2 flex flex-col gap-2">
                   {rows.map((row) => (
-                    <div key={row.clientId} className="flex items-center gap-2">
+                    <div key={row.clientId} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <input
                         value={row.name}
                         onChange={(e) => updateRow(row.clientId, { name: e.target.value })}
                         placeholder="Category name"
-                        className="h-10 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm text-text outline-none focus:border-primary"
+                        className="h-10 w-full rounded-md border border-border-strong bg-surface px-3 text-sm text-text outline-none focus:border-primary sm:flex-1"
                       />
-                      <select
-                        value={row.kind}
-                        onChange={(e) => updateRow(row.clientId, { kind: e.target.value as CategoryKind })}
-                        className="h-10 rounded-lg border border-border-strong bg-surface px-2 text-sm text-text outline-none focus:border-primary"
-                      >
-                        <option value="Standard">Standard</option>
-                        <option value="FixedAccount">Fixed account</option>
-                      </select>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        value={row.percentage}
-                        onChange={(e) => updateRow(row.clientId, { percentage: Number(e.target.value) })}
-                        className="h-10 w-20 rounded-lg border border-border-strong bg-surface px-2 text-right text-sm text-text outline-none focus:border-primary"
-                      />
-                      <span className="text-sm text-subtle">%</span>
-                      <button
-                        type="button"
-                        onClick={() => removeRow(row.clientId)}
-                        className="text-sm text-subtle hover:text-danger"
-                        aria-label={`Remove ${row.name || "category"}`}
-                      >
-                        ✕
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={row.kind}
+                          onChange={(e) => updateRow(row.clientId, { kind: e.target.value as CategoryKind })}
+                          className="h-10 flex-1 rounded-md border border-border-strong bg-surface px-2 text-sm text-text outline-none focus:border-primary sm:flex-none"
+                        >
+                          <option value="Standard">Standard</option>
+                          <option value="FixedAccount">Fixed account</option>
+                        </select>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          value={row.percentage}
+                          onChange={(e) => updateRow(row.clientId, { percentage: Number(e.target.value) })}
+                          className="h-10 w-20 shrink-0 rounded-md border border-border-strong bg-surface px-2 text-right text-sm text-text outline-none focus:border-primary"
+                        />
+                        <span className="shrink-0 text-sm text-subtle">%</span>
+                        <button
+                          type="button"
+                          onClick={() => removeRow(row.clientId)}
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sm text-subtle transition-colors hover:bg-danger-tint hover:text-danger"
+                          aria-label={`Remove ${row.name || "category"}`}
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

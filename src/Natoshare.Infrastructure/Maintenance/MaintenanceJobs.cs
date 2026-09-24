@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Natoshare.Application.Common;
 using Natoshare.Application.Ledger;
 using Natoshare.Application.Maintenance;
+using Natoshare.Domain.Admin;
 using Natoshare.Domain.Budgeting;
 using Natoshare.Domain.Common;
 using Natoshare.Domain.Identity;
@@ -102,6 +103,14 @@ public class MaintenanceJobs : IMaintenanceJobs
         }
     }
 
+    public async Task PurgeUserImmediatelyAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            ?? throw new NotFoundException("We could not find that user.");
+
+        await PurgeOneUserAsync(user, cancellationToken);
+    }
+
     // Every child table (repayments, redemptions, splits, tags, category months and
     // allocations) is cascade-deleted by Postgres itself the moment its parent row
     // here goes, so only the top-level, directly user-owned tables need deleting by
@@ -183,6 +192,17 @@ public class MaintenanceJobs : IMaintenanceJobs
         _logger.LogInformation(
             "LedgerIntegrityCheck checked {CheckedCount} settled categor(y/ies), found {DriftCount} with drift.",
             settledCategories.Count, driftCount);
+
+        // Kept so the admin app's monitoring screen can show "last run" without
+        // having to dig through log files (docs/04-admin-app.md section 2.5).
+        _dbContext.IntegrityCheckRuns.Add(new IntegrityCheckRun
+        {
+            Id = Guid.CreateVersion7(),
+            RanAt = _clock.UtcNow,
+            CheckedCount = settledCategories.Count,
+            DriftCount = driftCount,
+        });
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return driftCount;
     }

@@ -52,17 +52,17 @@ export function PeopleMoneyScreen() {
     <div>
       <SiteHeader />
 
-      <main className="mx-auto max-w-4xl px-4 pb-16">
+      <main className="px-4 pb-16 pt-6 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
         <h1 className="text-2xl font-bold text-text">Loans, debts & promises</h1>
 
-        <div className="mt-4 flex gap-2 border-b border-border">
+        <div className="mt-4 inline-flex rounded-full bg-surface-2 p-1">
           {(["Loans", "Debts", "Promises"] as Tab[]).map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`px-4 py-2.5 text-sm font-semibold ${
-                tab === t ? "border-b-2 border-primary text-text" : "text-muted hover:text-text"
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
+                tab === t ? "bg-surface text-text shadow-sm" : "text-muted hover:bg-surface/60 hover:text-text"
               }`}
             >
               {t}
@@ -219,20 +219,31 @@ function LoansPanel({
       )}
 
       <div className="mt-4 flex flex-col gap-3">
-        {loans.length === 0 && !showForm && <p className="text-sm text-muted">Nothing lent out yet.</p>}
+        {loans.length === 0 && !showForm && (
+          <p className="rounded-xl border border-dashed border-border-strong px-4 py-8 text-center text-sm text-muted">
+            Nothing lent out yet.
+          </p>
+        )}
         {loans.map((loan) => (
-          <div key={loan.id} className="rounded-xl border border-border bg-surface p-4">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-text">{loan.borrowerName}</span>
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[loan.status]}`}>{loan.status}</span>
+          <div key={loan.id} className="rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4 shadow-sm transition-shadow hover:shadow-md">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-tint font-display text-sm font-bold text-primary">
+                  {loan.borrowerName.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-text">{loan.borrowerName}</p>
+                  <p className="truncate text-xs text-muted">
+                    {formatMoney(loan.amount, currencyCode, locale)} lent on {loan.lentOn}
+                    {loan.expectedReturnOn ? `, expected back ${loan.expectedReturnOn}` : ""}
+                  </p>
+                </div>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[loan.status]}`}>{loan.status}</span>
             </div>
-            <p className="mt-1 text-sm text-muted">
-              {formatMoney(loan.amount, currencyCode, locale)} lent on {loan.lentOn}
-              {loan.expectedReturnOn ? `, expected back ${loan.expectedReturnOn}` : ""}
-              {loan.linkedSource ? ` · from ${accountLabel(loan.linkedSource, categories)}` : ""}
-            </p>
+            {loan.linkedSource && <p className="mt-1.5 text-xs text-muted">From {accountLabel(loan.linkedSource, categories)}</p>}
             {loan.outstanding > 0 && (
-              <p className="mt-1 text-sm font-medium text-text">{formatMoney(loan.outstanding, currencyCode, locale)} still outstanding</p>
+              <p className="mt-1.5 text-sm font-semibold text-text">{formatMoney(loan.outstanding, currencyCode, locale)} still outstanding</p>
             )}
 
             {loan.repayments.length > 0 && (
@@ -323,7 +334,7 @@ function NewLoanForm({
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+    <div className="mt-4 rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4">
       <p className="text-sm font-semibold text-text">Lend money</p>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <TextField label="Borrower" value={borrowerName} onChange={(e) => setBorrowerName(e.target.value)} />
@@ -449,19 +460,30 @@ function DebtsPanel({
       )}
 
       <div className="mt-4 flex flex-col gap-3">
-        {debts.length === 0 && !showForm && <p className="text-sm text-muted">Nothing borrowed yet.</p>}
+        {debts.length === 0 && !showForm && (
+          <p className="rounded-xl border border-dashed border-border-strong px-4 py-8 text-center text-sm text-muted">
+            Nothing borrowed yet.
+          </p>
+        )}
         {debts.map((debt) => (
-          <div key={debt.id} className="rounded-xl border border-border bg-surface p-4">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-text">{debt.lenderName}</span>
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[debt.status]}`}>{debt.status}</span>
+          <div key={debt.id} className="rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4 shadow-sm transition-shadow hover:shadow-md">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-tint font-display text-sm font-bold text-primary">
+                  {debt.lenderName.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-text">{debt.lenderName}</p>
+                  <p className="truncate text-xs text-muted">
+                    {formatMoney(debt.amount, currencyCode, locale)} borrowed on {debt.borrowedOn}
+                    {debt.dueOn ? `, due ${debt.dueOn}` : ""}
+                  </p>
+                </div>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[debt.status]}`}>{debt.status}</span>
             </div>
-            <p className="mt-1 text-sm text-muted">
-              {formatMoney(debt.amount, currencyCode, locale)} borrowed on {debt.borrowedOn}
-              {debt.dueOn ? `, due ${debt.dueOn}` : ""}
-            </p>
             {debt.outstanding > 0 && (
-              <p className="mt-1 text-sm font-medium text-text">{formatMoney(debt.outstanding, currencyCode, locale)} still owed</p>
+              <p className="mt-1.5 text-sm font-semibold text-text">{formatMoney(debt.outstanding, currencyCode, locale)} still owed</p>
             )}
 
             {debt.repayments.length > 0 && (
@@ -537,7 +559,7 @@ function NewDebtForm({ accessToken, onDone, onCancel }: { accessToken: string | 
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+    <div className="mt-4 rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4">
       <p className="text-sm font-semibold text-text">Record a debt</p>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <TextField label="Lender" value={lenderName} onChange={(e) => setLenderName(e.target.value)} />
@@ -611,18 +633,29 @@ function PromisesPanel({
       )}
 
       <div className="mt-4 flex flex-col gap-3">
-        {promises.length === 0 && !showForm && <p className="text-sm text-muted">No promises made yet.</p>}
+        {promises.length === 0 && !showForm && (
+          <p className="rounded-xl border border-dashed border-border-strong px-4 py-8 text-center text-sm text-muted">
+            No promises made yet.
+          </p>
+        )}
         {promises.map((promise) => (
-          <div key={promise.id} className="rounded-xl border border-border bg-surface p-4">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-text">{promise.personName}</span>
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[promise.status]}`}>{promise.status}</span>
+          <div key={promise.id} className="rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4 shadow-sm transition-shadow hover:shadow-md">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-tint font-display text-sm font-bold text-primary">
+                  {promise.personName.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-text">{promise.personName}</p>
+                  <p className="truncate text-xs text-muted">
+                    {formatMoney(promise.amount, currencyCode, locale)} promised on {promise.madeOn}
+                  </p>
+                </div>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[promise.status]}`}>{promise.status}</span>
             </div>
-            <p className="mt-1 text-sm text-muted">
-              {formatMoney(promise.amount, currencyCode, locale)} promised on {promise.madeOn}
-            </p>
             {promise.outstanding > 0 && (
-              <p className="mt-1 text-sm font-medium text-text">{formatMoney(promise.outstanding, currencyCode, locale)} still owed</p>
+              <p className="mt-1.5 text-sm font-semibold text-text">{formatMoney(promise.outstanding, currencyCode, locale)} still owed</p>
             )}
 
             {promise.redemptions.length > 0 && (
@@ -756,7 +789,7 @@ function NewPromiseForm({ accessToken, onDone, onCancel }: { accessToken: string
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+    <div className="mt-4 rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4">
       <p className="text-sm font-semibold text-text">Make a promise</p>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <TextField label="Person" value={personName} onChange={(e) => setPersonName(e.target.value)} />

@@ -31,9 +31,16 @@ export function NotificationBell({ accessToken }: { accessToken: string | null }
     return () => clearInterval(interval);
   }, [accessToken]);
 
+  // Only ever shown inside SiteHeader, which now has a coloured gradient
+  // background (see docs/feedback.md), so this is styled for white-on-gradient,
+  // not the white-surface look most of the rest of the app uses.
   return (
-    <Link href="/notifications" className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-surface-2" aria-label="Notifications">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="text-muted">
+    <Link
+      href="/notifications"
+      className="relative flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/15"
+      aria-label="Notifications"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="text-white">
         <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
         <path d="M13.7 21a2 2 0 0 1-3.4 0" />
       </svg>

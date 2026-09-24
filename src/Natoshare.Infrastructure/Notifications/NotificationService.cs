@@ -23,6 +23,11 @@ public class NotificationService : INotificationService
     public async Task<IReadOnlyList<NotificationDto>> ListAsync(
         Guid userId, bool unreadOnly, string? kind, int page, int pageSize, CancellationToken cancellationToken = default)
     {
+        // Clamped server side so a careless ?pageSize=999999 cannot force a huge
+        // read even of the caller's own data (Phase 11's performance pass).
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
         var query = _dbContext.Notifications.Where(n => n.UserId == userId);
 
         if (unreadOnly)

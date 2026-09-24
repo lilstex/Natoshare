@@ -30,4 +30,14 @@ public interface ILedgerService
     // floored at zero. This is "recompute from scratch", the same number a cached
     // balance is supposed to always match.
     Task<Money> GetAccountBalanceAsync(Guid userId, AccountRef account, CancellationToken cancellationToken = default);
+
+    // The same recompute-from-scratch as GetAccountBalanceAsync, but for many
+    // accounts in one database round trip instead of one call per account. Callers
+    // like BalanceService and NetPositionService used to ask for a category's
+    // savings and external balance one category at a time in a loop, which meant a
+    // dashboard load with N categories ran roughly 4N separate queries just for
+    // this. Every account asked for gets an entry back, Money.Zero if it has no
+    // ledger rows yet, so callers never need a null check.
+    Task<IReadOnlyDictionary<AccountRef, Money>> GetAccountBalancesAsync(
+        Guid userId, IReadOnlyList<AccountRef> accounts, CancellationToken cancellationToken = default);
 }

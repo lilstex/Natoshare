@@ -33,18 +33,27 @@ public class NetPositionService : INetPositionService
         var today = UserTime.TodayFor(user.TimeZoneId, _clock.UtcNow);
         var snapshot = await _budgetMonthService.GetSnapshotAsync(userId, today.Year, today.Month, cancellationToken);
 
+        // One query for every category's savings and external balance, instead of
+        // two queries per category in a loop (the same N+1 fixed in BalanceService
+        // during Phase 11's performance pass, /dashboard calls into both).
+        var accountsToLoad = snapshot.Categories
+            .SelectMany(c => new[] { AccountRef.CategorySavings(c.CategoryId), AccountRef.External(c.CategoryId) })
+            .Append(AccountRef.FlexiblePool())
+            .ToList();
+        var accountBalances = await _ledgerService.GetAccountBalancesAsync(userId, accountsToLoad, cancellationToken);
+
         var savings = 0m;
         var deployed = 0m;
         var carriedDeficits = 0m;
 
         foreach (var category in snapshot.Categories)
         {
-            savings += (await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.CategorySavings(category.CategoryId), cancellationToken)).Amount;
-            deployed += (await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.External(category.CategoryId), cancellationToken)).Amount;
+            savings += accountBalances[AccountRef.CategorySavings(category.CategoryId)].Amount;
+            deployed += accountBalances[AccountRef.External(category.CategoryId)].Amount;
             carriedDeficits += category.CarriedInDeficit.Amount;
         }
 
-        var pool = (await _ledgerService.GetAccountBalanceAsync(userId, AccountRef.FlexiblePool(), cancellationToken)).Amount;
+        var pool = accountBalances[AccountRef.FlexiblePool()].Amount;
 
         var loansOut = await _dbContext.LoansOut
             .Include(l => l.Repayments)

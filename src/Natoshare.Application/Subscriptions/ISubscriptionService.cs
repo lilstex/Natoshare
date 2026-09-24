@@ -11,4 +11,8 @@ public interface ISubscriptionService
     Task<IReadOnlyList<SubscriptionRecordDto>> GetHistoryAsync(Guid userId, CancellationToken cancellationToken = default);
 
     Task ActivateAsync(Guid adminUserId, string reference, ActivateSubscriptionRequest request, CancellationToken cancellationToken = default);
+
+    // For the admin app's subscriptions queue. Null status means every record, not
+    // just one user's, which is why this takes no userId unlike GetHistoryAsync.
+    Task<IReadOnlyList<AdminSubscriptionRecordDto>> ListAsync(string? status, CancellationToken cancellationToken = default);
 }

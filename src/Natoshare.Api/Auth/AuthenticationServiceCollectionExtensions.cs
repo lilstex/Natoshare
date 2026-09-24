@@ -51,15 +51,21 @@ public static class AuthenticationServiceCollectionExtensions
                 };
 
                 // A browser download (window.open) cannot send an Authorization
-                // header, so this one route also accepts the token as a query
-                // string param. Scoped narrowly to just the export route, not every
+                // header, so these routes also accept the token as a query string
+                // param. Scoped narrowly to just these two routes, not every
                 // request, so a token never needs to show up in a URL anywhere else.
+                // /hangfire needs this too since the admin app just opens it in a new
+                // tab as a plain link, it cannot attach a bearer header to that
+                // (docs/04-admin-app.md section 2.5, "gated to admins").
                 bearerOptions.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
                     {
                         var accessToken = context.Request.Query["accessToken"];
-                        if (!string.IsNullOrEmpty(accessToken) && context.Request.Path.StartsWithSegments("/api/v1/reports/export"))
+                        var isTokenViaQueryAllowed = context.Request.Path.StartsWithSegments("/api/v1/reports/export")
+                            || context.Request.Path.StartsWithSegments("/hangfire");
+
+                        if (!string.IsNullOrEmpty(accessToken) && isTokenViaQueryAllowed)
                         {
                             context.Token = accessToken;
                         }

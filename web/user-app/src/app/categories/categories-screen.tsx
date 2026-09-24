@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Category, CategoryAllocationInput, CategoryKind } from "@natoshare/shared-types";
+import { SEGMENT_COLORS } from "@/components/split-ring";
 import { Button } from "@/components/ui/button";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
@@ -150,8 +151,12 @@ export function CategoriesScreen() {
   const archivedCategories = categories.filter((c) => c.isArchived);
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <button type="button" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-muted hover:text-text">
+    <main className="px-4 py-10 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+      <button
+        type="button"
+        onClick={() => router.push("/dashboard")}
+        className="-ml-2 rounded-md px-2 py-1 text-sm font-medium text-muted transition-colors hover:bg-surface hover:text-text hover:shadow-sm"
+      >
         ← Back
       </button>
 
@@ -167,29 +172,47 @@ export function CategoriesScreen() {
         <p className="mt-6 text-sm text-muted">Loading…</p>
       ) : (
         <div className="mt-6 flex flex-col gap-3">
-          {activeCategories.map((category) => (
-            <div key={category.id} className="rounded-xl border border-border bg-surface p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-text">{category.name}</p>
-                    {category.isLocked && (
-                      <span className="rounded-full bg-warning-tint px-2 py-0.5 text-[11px] font-semibold text-warning">Locked</span>
-                    )}
+          {activeCategories.map((category, index) => {
+            const color = SEGMENT_COLORS[index % SEGMENT_COLORS.length];
+            return (
+            <div key={category.id} className="rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4 shadow-sm transition-shadow hover:shadow-md">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                    style={{ backgroundColor: `color-mix(in srgb, ${color} 18%, white)` }}
+                  >
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate font-semibold text-text">{category.name}</p>
+                      {category.isLocked && (
+                        <span className="shrink-0 rounded-full bg-warning-tint px-2 py-0.5 text-[11px] font-semibold text-warning">Locked</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted">
+                      {category.kind === "FixedAccount" ? "Fixed account" : "Standard"}
+                      {category.isLocked ? " · over the Free plan's category limit" : ""}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted">
-                    {category.kind === "FixedAccount" ? "Fixed account" : "Standard"}
-                    {category.currentPercentage !== null ? ` · ${category.currentPercentage}%` : " · not split yet"}
-                    {category.isLocked ? " · over the Free plan's category limit" : ""}
-                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => startArchiving(category)}
-                  className="text-sm font-medium text-muted hover:text-danger"
-                >
-                  Archive
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                  {category.currentPercentage !== null ? (
+                    <span className="rounded-full bg-primary-tint px-2.5 py-1 text-xs font-semibold text-primary">
+                      {category.currentPercentage}%
+                    </span>
+                  ) : (
+                    <span className="text-xs text-subtle">not split yet</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => startArchiving(category)}
+                    className="rounded-md px-2 py-1 text-sm font-medium text-muted transition-colors hover:bg-danger-tint hover:text-danger"
+                  >
+                    Archive
+                  </button>
+                </div>
               </div>
 
               {archivingId === category.id && archiveDraft && (
@@ -232,26 +255,27 @@ export function CategoriesScreen() {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
 
           <div className="rounded-xl border border-dashed border-border-strong p-4">
             <p className="text-sm font-semibold text-text">Add a category</p>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Category name"
-                className="h-10 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm text-text outline-none focus:border-primary"
+                className="h-10 w-full rounded-md border border-border-strong bg-surface px-3 text-sm text-text outline-none focus:border-primary sm:flex-1"
               />
               <select
                 value={newKind}
                 onChange={(e) => setNewKind(e.target.value as CategoryKind)}
-                className="h-10 rounded-lg border border-border-strong bg-surface px-2 text-sm text-text outline-none focus:border-primary"
+                className="h-10 w-full rounded-md border border-border-strong bg-surface px-2 text-sm text-text outline-none focus:border-primary sm:w-auto"
               >
                 <option value="Standard">Standard</option>
                 <option value="FixedAccount">Fixed account</option>
               </select>
-              <Button type="button" onClick={handleCreate} disabled={isCreating}>
+              <Button type="button" onClick={handleCreate} disabled={isCreating} className="w-full sm:w-auto">
                 Add
               </Button>
             </div>
@@ -261,7 +285,7 @@ export function CategoriesScreen() {
             {needsUpgradeToAdd && (
               <p className="mt-2 rounded-lg bg-warning-tint px-3 py-2 text-xs text-warning">
                 Free accounts are limited to 4 categories.{" "}
-                <Link href="/plans" className="font-semibold underline">
+                <Link href="/plans" className="font-semibold underline decoration-2 underline-offset-2 transition-opacity hover:opacity-75">
                   Upgrade to Pro
                 </Link>{" "}
                 for unlimited categories.

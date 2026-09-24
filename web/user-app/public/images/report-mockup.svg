@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 700" role="img" aria-label="Natoshare report showing allocated versus spent versus saved per category, and a savings rate">
+  <defs>
+    <clipPath id="reportFrameClip">
+      <rect x="0" y="0" width="1040" height="700" rx="24" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#reportFrameClip)">
+    <rect x="0" y="0" width="1040" height="700" fill="#F5F4FB" />
+
+    <!-- browser chrome -->
+    <rect x="0" y="0" width="1040" height="44" fill="#FFFFFF" />
+    <circle cx="28" cy="22" r="6" fill="#E64980" />
+    <circle cx="50" cy="22" r="6" fill="#EE8C22" />
+    <circle cx="72" cy="22" r="6" fill="#12B886" />
+    <rect x="140" y="11" width="320" height="22" rx="11" fill="#F5F4FB" stroke="#E5E2F1" />
+    <text x="160" y="26" font-family="Arial, sans-serif" font-size="11" fill="#9A96AD">app.natoshare.dev/reports</text>
+
+    <!-- header + segmented control -->
+    <text x="32" y="92" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1B1930">Reports</text>
+    <rect x="32" y="112" width="300" height="40" rx="20" fill="#EFEDF9" />
+    <rect x="34" y="114" width="98" height="36" rx="18" fill="#FFFFFF" />
+    <text x="55" y="137" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#1B1930">This month</text>
+    <text x="160" y="137" font-family="Arial, sans-serif" font-size="12" fill="#6A6782">Range</text>
+    <text x="250" y="137" font-family="Arial, sans-serif" font-size="12" fill="#6A6782">Year</text>
+
+    <!-- bar chart card -->
+    <rect x="32" y="176" width="656" height="330" rx="22" fill="#FFFFFF" stroke="#E5E2F1" />
+    <text x="60" y="212" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#1B1930">Allocated vs spent vs saved</text>
+
+    <!-- Rent group -->
+    <rect x="72" y="420" width="26" height="50" fill="#ECE7FC" />
+    <rect x="100" y="380" width="26" height="90" fill="#6D4AE0" />
+    <rect x="128" y="460" width="26" height="10" fill="#12B886" />
+    <text x="112" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6A6782">Rent</text>
+
+    <!-- Feeding group -->
+    <rect x="212" y="360" width="26" height="110" fill="#FBEDDC" />
+    <rect x="240" y="340" width="26" height="130" fill="#EE8C22" />
+    <rect x="268" y="468" width="26" height="2" fill="#12B886" />
+    <text x="252" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6A6782">Feeding</text>
+
+    <!-- Transport group -->
+    <rect x="352" y="410" width="26" height="60" fill="#E5EBFC" />
+    <rect x="380" y="425" width="26" height="45" fill="#4C6FE8" />
+    <rect x="408" y="400" width="26" height="15" fill="#12B886" />
+    <text x="392" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6A6782">Transport</text>
+
+    <!-- Utility group -->
+    <rect x="492" y="430" width="26" height="40" fill="#E3F7F0" />
+    <rect x="520" y="440" width="26" height="30" fill="#12B886" />
+    <rect x="548" y="420" width="26" height="10" fill="#12B886" />
+    <text x="532" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6A6782">Utility</text>
+
+    <!-- Investment group -->
+    <rect x="592" y="400" width="26" height="70" fill="#FDF1D9" />
+    <rect x="620" y="410" width="26" height="60" fill="#F4B740" />
+    <text x="620" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6A6782">Invest</text>
+
+    <rect x="60" y="516" width="12" height="12" fill="#ECE7FC" />
+    <text x="78" y="526" font-family="Arial, sans-serif" font-size="11" fill="#6A6782">Allocated</text>
+    <rect x="160" y="516" width="12" height="12" fill="#6D4AE0" />
+    <text x="178" y="526" font-family="Arial, sans-serif" font-size="11" fill="#6A6782">Spent</text>
+    <rect x="240" y="516" width="12" height="12" fill="#12B886" />
+    <text x="258" y="526" font-family="Arial, sans-serif" font-size="11" fill="#6A6782">Saved</text>
+
+    <!-- variance table -->
+    <text x="60" y="560" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#9A96AD">CATEGORY</text>
+    <text x="420" y="560" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#9A96AD">VARIANCE</text>
+    <line x1="60" y1="570" x2="656" y2="570" stroke="#EFEDF9" />
+    <text x="60" y="592" font-family="Arial, sans-serif" font-size="13" fill="#1B1930">Rent</text>
+    <rect x="420" y="580" width="70" height="20" rx="10" fill="#E3F7F0" />
+    <text x="437" y="594" font-family="Arial, sans-serif" font-size="11" font-weight="600" fill="#12B886">Under</text>
+    <text x="60" y="622" font-family="Arial, sans-serif" font-size="13" fill="#1B1930">Feeding</text>
+    <rect x="420" y="610" width="70" height="20" rx="10" fill="#FBE3EE" />
+    <text x="443" y="624" font-family="Arial, sans-serif" font-size="11" font-weight="600" fill="#E64980">Over</text>
+
+    <!-- savings rate ring card -->
+    <rect x="704" y="176" width="304" height="330" rx="22" fill="#FFFFFF" stroke="#E5E2F1" />
+    <text x="732" y="212" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#1B1930">Savings rate</text>
+
+    <circle cx="856" cy="330" r="86" fill="none" stroke="#EFEDF9" stroke-width="18" />
+    <circle cx="856" cy="330" r="86" fill="none" stroke="#12B886" stroke-width="18"
+      stroke-dasharray="378 540" stroke-dashoffset="0" transform="rotate(-90 856 330)" stroke-linecap="round" />
+    <text x="856" y="322" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1B1930">70%</text>
+    <text x="856" y="344" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#9A96AD">saved this month</text>
+
+    <text x="732" y="450" font-family="Arial, sans-serif" font-size="12" fill="#6A6782">Total budget</text>
+    <text x="988" y="450" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#1B1930">&#8358;1,275,000</text>
+    <line x1="732" y1="462" x2="988" y2="462" stroke="#EFEDF9" />
+    <text x="732" y="484" font-family="Arial, sans-serif" font-size="12" fill="#6A6782">Total saved</text>
+    <text x="988" y="484" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#12B886">&#8358;892,500</text>
+  </g>
+</svg>

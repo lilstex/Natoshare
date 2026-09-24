@@ -123,7 +123,7 @@ public class MeService : IMeService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        await _auditLogger.LogAsync(user.Id, "User", "AccountDeletionRequested", "User", user.Id.ToString(), ip, null, cancellationToken);
+        await _auditLogger.LogAsync(user.Id, "User", "AccountDeletionRequested", "User", user.Id.ToString(), ip, null, cancellationToken: cancellationToken);
     }
 
     private async Task<User> GetUserOrThrowAsync(Guid userId)

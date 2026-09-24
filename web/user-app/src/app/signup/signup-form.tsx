@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { AuthCard } from "@/components/auth-card";
 import { Button } from "@/components/ui/button";
+import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
@@ -64,7 +65,7 @@ export function SignupForm() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-primary">
+          <Link href="/login" className="font-semibold text-primary transition-colors hover:text-primary-strong">
             Log in
           </Link>
         </>
@@ -89,10 +90,9 @@ export function SignupForm() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <div>
-          <TextField
+          <PasswordField
             id="password"
             label="Password"
-            type="password"
             autoComplete="new-password"
             required
             value={password}

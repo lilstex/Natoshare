@@ -1,0 +1,12 @@
+{
+  "name": "e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Full end-to-end Playwright suite: the main user-app flow, plus an admin-app smoke test. Runs against real, already-running services (API + both frontends), see 05-implementation-phases.md's Phase 11 and .github/workflows/ci.yml.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

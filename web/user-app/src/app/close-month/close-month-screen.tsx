@@ -168,8 +168,12 @@ export function CloseMonthScreen() {
     <div>
       <SiteHeader />
 
-      <main className="mx-auto max-w-3xl px-4 pb-16">
-        <button type="button" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-muted hover:text-text">
+      <main className="px-4 pb-16 pt-6 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+        <button
+          type="button"
+          onClick={() => router.push("/dashboard")}
+          className="-ml-2 rounded-md px-2 py-1 text-sm font-medium text-muted transition-colors hover:bg-surface hover:text-text hover:shadow-sm"
+        >
           ← Back
         </button>
 
@@ -182,7 +186,7 @@ export function CloseMonthScreen() {
         {isLoading ? (
           <p className="mt-6 text-sm text-muted">Loading…</p>
         ) : alreadyClosed ? (
-          <p className="mt-6 rounded-xl border border-border bg-surface p-4 text-sm text-muted">
+          <p className="mt-6 rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4 text-sm text-muted">
             This month is already closed. Come back once next month has some activity in it.
           </p>
         ) : result ? (
@@ -202,7 +206,7 @@ export function CloseMonthScreen() {
             )}
 
             {preview.fixedAccountsToConfirm.length > 0 && (
-              <section className="rounded-xl border border-border bg-surface p-4">
+              <section className="rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4">
                 <h2 className="text-sm font-semibold text-text">Confirm fixed accounts</h2>
                 <p className="mt-1 text-xs text-muted">Say how much actually moved out, and when, for each fixed account category.</p>
                 <div className="mt-3 flex flex-col gap-3">
@@ -228,7 +232,7 @@ export function CloseMonthScreen() {
                                 [fa.categoryId]: { amount: e.target.value, transferredOn: c[fa.categoryId]?.transferredOn ?? "" },
                               }))
                             }
-                            className="h-9 w-28 rounded-lg border border-border-strong bg-surface px-2 text-sm outline-none focus:border-primary"
+                            className="h-9 w-28 rounded-md border border-border-strong bg-surface px-2 text-sm outline-none focus:border-primary"
                           />
                           <input
                             type="date"
@@ -239,7 +243,7 @@ export function CloseMonthScreen() {
                                 [fa.categoryId]: { amount: c[fa.categoryId]?.amount ?? String(fa.allocated), transferredOn: e.target.value },
                               }))
                             }
-                            className="h-9 flex-1 rounded-lg border border-border-strong bg-surface px-2 text-sm outline-none focus:border-primary"
+                            className="h-9 flex-1 rounded-md border border-border-strong bg-surface px-2 text-sm outline-none focus:border-primary"
                           />
                           <Button type="button" variant="secondary" className="h-9 text-xs" onClick={() => handleConfirmFixedAccount(fa.categoryId)}>
                             Confirm
@@ -252,7 +256,7 @@ export function CloseMonthScreen() {
               </section>
             )}
 
-            <section className="rounded-xl border border-border bg-surface p-4">
+            <section className="rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4">
               <h2 className="text-sm font-semibold text-text">Rolls into savings</h2>
               {preview.projectedSavings.length === 0 ? (
                 <p className="mt-1 text-xs text-muted">Nothing left over to save this month.</p>
@@ -281,7 +285,7 @@ export function CloseMonthScreen() {
 
                 <div className="mt-3 flex flex-col gap-3">
                   {preview.deficits.map((deficit) => (
-                    <div key={deficit.categoryId} className="rounded-lg border border-border bg-surface p-3">
+                    <div key={deficit.categoryId} className="rounded-lg border border-border bg-gradient-to-br from-surface to-primary-tint p-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-text">{deficit.name}</span>
                         <span className="text-sm font-semibold text-danger">
@@ -304,7 +308,7 @@ export function CloseMonthScreen() {
                             [deficit.categoryId]: { method: e.target.value, sourceCategoryId: selected?.categoryId ?? null },
                           }));
                         }}
-                        className="mt-2 h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm outline-none focus:border-primary"
+                        className="mt-2 h-9 w-full rounded-md border border-border-strong bg-surface px-2 text-sm outline-none focus:border-primary"
                       >
                         {deficit.suggestedSources.map((s, i) => (
                           <option key={i} value={s.kind}>

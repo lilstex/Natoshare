@@ -112,14 +112,18 @@ export function NotificationsScreen() {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <button type="button" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-muted hover:text-text">
+    <main className="px-4 py-10 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+      <button
+        type="button"
+        onClick={() => router.push("/dashboard")}
+        className="-ml-2 rounded-md px-2 py-1 text-sm font-medium text-muted transition-colors hover:bg-surface hover:text-text hover:shadow-sm"
+      >
         ← Back
       </button>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-text">Notifications</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={() => setShowPreferences((v) => !v)}>
             {showPreferences ? "Hide settings" : "Alert settings"}
           </Button>
@@ -134,7 +138,7 @@ export function NotificationsScreen() {
       {error && <p className="mt-4 rounded-xl bg-danger-tint px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 
       {showPreferences && (
-        <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+        <div className="mt-4 rounded-xl border border-border bg-gradient-to-br from-surface to-primary-tint p-4">
           <p className="text-sm font-semibold text-text">Alert settings</p>
           <div className="mt-3 flex flex-col gap-4">
             {preferences.map((preference) => {
@@ -179,7 +183,9 @@ export function NotificationsScreen() {
               type="button"
               onClick={() => !notification.isRead && markRead(notification.id)}
               className={`w-full rounded-xl border p-4 text-left transition-colors ${
-                notification.isRead ? "border-border bg-surface" : "border-primary-tint bg-primary-tint/40"
+                notification.isRead
+                  ? "border-border bg-gradient-to-br from-surface to-surface-2"
+                  : "border-primary-tint bg-primary-tint/40"
               }`}
             >
               <div className="flex items-center justify-between gap-3">

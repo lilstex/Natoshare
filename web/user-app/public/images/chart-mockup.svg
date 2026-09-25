@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Spending split chart across categories">
+  <defs>
+    <clipPath id="chartFrameClip">
+      <rect x="0" y="0" width="640" height="480" rx="24" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#chartFrameClip)">
+    <rect x="0" y="0" width="640" height="480" fill="#FFFFFF" stroke="#E5E2F1" />
+
+    <text x="32" y="48" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#1B1930">Spending overview</text>
+    <text x="32" y="68" font-family="Arial, sans-serif" font-size="12" fill="#9A96AD">Where this month's money went</text>
+
+    <!-- donut: Rent 25, Feeding 25, Transport 15, Utility 10, Subscription 5, Investment 20 -->
+    <!-- circumference = 2*pi*80 = 502.65 -->
+    <circle cx="180" cy="260" r="80" fill="none" stroke="#EFEDF9" stroke-width="34" />
+    <circle cx="180" cy="260" r="80" fill="none" stroke="#6D4AE0" stroke-width="34"
+      stroke-dasharray="125.7 502.65" stroke-dashoffset="0" transform="rotate(-90 180 260)" />
+    <circle cx="180" cy="260" r="80" fill="none" stroke="#EE8C22" stroke-width="34"
+      stroke-dasharray="125.7 502.65" stroke-dashoffset="-125.7" transform="rotate(-90 180 260)" />
+    <circle cx="180" cy="260" r="80" fill="none" stroke="#4C6FE8" stroke-width="34"
+      stroke-dasharray="75.4 502.65" stroke-dashoffset="-251.4" transform="rotate(-90 180 260)" />
+    <circle cx="180" cy="260" r="80" fill="none" stroke="#12B886" stroke-width="34"
+      stroke-dasharray="50.3 502.65" stroke-dashoffset="-326.8" transform="rotate(-90 180 260)" />
+    <circle cx="180" cy="260" r="80" fill="none" stroke="#E64980" stroke-width="34"
+      stroke-dasharray="25.1 502.65" stroke-dashoffset="-377.1" transform="rotate(-90 180 260)" />
+    <circle cx="180" cy="260" r="80" fill="none" stroke="#F4B740" stroke-width="34"
+      stroke-dasharray="100.5 502.65" stroke-dashoffset="-402.2" transform="rotate(-90 180 260)" />
+    <text x="180" y="254" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1B1930">&#8358;750k</text>
+    <text x="180" y="274" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#9A96AD">spent this month</text>
+
+    <!-- legend -->
+    <circle cx="368" cy="176" r="6" fill="#6D4AE0" />
+    <text x="384" y="181" font-family="Arial, sans-serif" font-size="13" fill="#1B1930">Rent</text>
+    <text x="580" y="181" text-anchor="end" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#6A6782">25%</text>
+
+    <circle cx="368" cy="212" r="6" fill="#EE8C22" />
+    <text x="384" y="217" font-family="Arial, sans-serif" font-size="13" fill="#1B1930">Feeding</text>
+    <text x="580" y="217" text-anchor="end" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#6A6782">25%</text>
+
+    <circle cx="368" cy="248" r="6" fill="#4C6FE8" />
+    <text x="384" y="253" font-family="Arial, sans-serif" font-size="13" fill="#1B1930">Transportation</text>
+    <text x="580" y="253" text-anchor="end" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#6A6782">15%</text>
+
+    <circle cx="368" cy="284" r="6" fill="#12B886" />
+    <text x="384" y="289" font-family="Arial, sans-serif" font-size="13" fill="#1B1930">Utility</text>
+    <text x="580" y="289" text-anchor="end" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#6A6782">10%</text>
+
+    <circle cx="368" cy="320" r="6" fill="#E64980" />
+    <text x="384" y="325" font-family="Arial, sans-serif" font-size="13" fill="#1B1930">Subscription</text>
+    <text x="580" y="325" text-anchor="end" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#6A6782">5%</text>
+
+    <circle cx="368" cy="356" r="6" fill="#F4B740" />
+    <text x="384" y="361" font-family="Arial, sans-serif" font-size="13" fill="#1B1930">Investment</text>
+    <text x="580" y="361" text-anchor="end" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#6A6782">20%</text>
+  </g>
+</svg>

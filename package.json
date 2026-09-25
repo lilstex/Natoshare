@@ -5,7 +5,8 @@
   "workspaces": [
     "web/user-app",
     "web/admin-app",
-    "web/shared-types"
+    "web/shared-types",
+    "tests/e2e"
   ],
   "scripts": {
     "dev:user": "npm run dev --workspace=user-app",
@@ -13,6 +14,7 @@
     "lint:user": "npm run lint --workspace=user-app",
     "lint:admin": "npm run lint --workspace=admin-app",
     "build:user": "npm run build --workspace=user-app",
-    "build:admin": "npm run build --workspace=admin-app"
+    "build:admin": "npm run build --workspace=admin-app",
+    "e2e": "npm run test --workspace=e2e"
   }
 }

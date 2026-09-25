@@ -22,6 +22,11 @@
   --nato-on-primary: #ffffff;
   --nato-focus: #6d4ae0;
 
+  /* A solid button's own background/hover, see docs/06-design-system.md section 2.2's
+     note. Identical to --nato-primary/--nato-primary-strong in light mode. */
+  --nato-cta: #6d4ae0;
+  --nato-cta-hover: #5836c4;
+
   --nato-success: #12b886;
   --nato-success-tint: #e3f7f0;
   --nato-warning: #ee8c22;
@@ -57,11 +62,21 @@
 
     --nato-text: #f2f0fa;
     --nato-text-muted: #a7a2bc;
-    --nato-text-subtle: #7c7791;
+    /* WCAG AA needs 4.5:1 against --nato-bg here, the original #7c7791 only made
+       4.34:1, see docs/06-design-system.md section 2.2's note (Phase 11). */
+    --nato-text-subtle: #938eae;
 
     --nato-primary: #9075f2;
     --nato-primary-strong: #a88ff7;
     --nato-primary-tint: #2a2348;
+
+    /* A solid button's own background/hover: --nato-primary above is tuned to read
+       well as text/icons on --nato-bg, which is exactly why it fails WCAG AA
+       (3.49:1, needs 4.5:1) as a filled background with white text on top, no
+       single shade passes both roles against a background this dark. See
+       docs/06-design-system.md section 2.2's note (Phase 11). */
+    --nato-cta: #6d4ae0;
+    --nato-cta-hover: #5836c4;
 
     --nato-success: #2cc79a;
     --nato-success-tint: #16352e;
@@ -91,11 +106,13 @@
 
   --nato-text: #f2f0fa;
   --nato-text-muted: #a7a2bc;
-  --nato-text-subtle: #7c7791;
+  --nato-text-subtle: #938eae;
 
   --nato-primary: #9075f2;
   --nato-primary-strong: #a88ff7;
   --nato-primary-tint: #2a2348;
+  --nato-cta: #6d4ae0;
+  --nato-cta-hover: #5836c4;
 
   --nato-success: #2cc79a;
   --nato-success-tint: #16352e;
@@ -130,6 +147,8 @@
   --color-primary: var(--nato-primary);
   --color-primary-strong: var(--nato-primary-strong);
   --color-primary-tint: var(--nato-primary-tint);
+  --color-cta: var(--nato-cta);
+  --color-cta-hover: var(--nato-cta-hover);
 
   --color-success: var(--nato-success);
   --color-success-tint: var(--nato-success-tint);

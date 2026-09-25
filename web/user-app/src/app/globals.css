@@ -22,6 +22,11 @@
   --nato-on-primary: #ffffff;
   --nato-focus: #6d4ae0;
 
+  /* A solid button's own background/hover, see docs/06-design-system.md section 2.2's
+     note. Identical to --nato-primary/--nato-primary-strong in light mode. */
+  --nato-cta: #6d4ae0;
+  --nato-cta-hover: #5836c4;
+
   --nato-success: #12b886;
   --nato-success-tint: #e3f7f0;
   --nato-warning: #ee8c22;
@@ -45,40 +50,12 @@
   --nato-shadow-lg: 0 24px 56px rgba(90, 54, 196, 0.18);
 }
 
-/* This is the dark version of the tokens above, used when the visitor's system is set
-   to dark mode. We only list the values that actually change. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --nato-bg: #131120;
-    --nato-surface: #1d1a2c;
-    --nato-surface-2: #262239;
-    --nato-border: #322c46;
-    --nato-border-strong: #443c5e;
-
-    --nato-text: #f2f0fa;
-    --nato-text-muted: #a7a2bc;
-    --nato-text-subtle: #7c7791;
-
-    --nato-primary: #9075f2;
-    --nato-primary-strong: #a88ff7;
-    --nato-primary-tint: #2a2348;
-
-    --nato-success: #2cc79a;
-    --nato-success-tint: #16352e;
-    --nato-warning: #f59e3f;
-    --nato-warning-tint: #3a2c18;
-    --nato-danger: #f0619b;
-    --nato-danger-tint: #3a1e2c;
-    --nato-info: #7d97f0;
-    --nato-info-tint: #1e2540;
-
-    --gradient-brand: linear-gradient(135deg, #6a3fd6 0%, #4e32b8 55%, #3c57c4 120%);
-
-    --nato-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --nato-shadow-md: 0 12px 30px rgba(0, 0, 0, 0.45);
-    --nato-shadow-lg: 0 28px 60px rgba(0, 0, 0, 0.55);
-  }
-}
+/* Automatic dark mode (following the visitor's system setting) is switched off for
+   now, per UI feedback that the app looked too dark, see docs/feedback.md Phase A.
+   The dark values still exist below, only reachable through :root[data-theme="dark"],
+   which nothing sets yet, so the app always renders the light palette above. If a
+   real light/dark toggle gets built later, flipping that block back on (guarded the
+   same way, :root:not([data-theme="light"])) is all that is needed. */
 
 /* This lets us force dark mode later from a settings toggle, even if the visitor's
    system is set to light mode. Not used yet, but the tokens are ready for it. */
@@ -91,11 +68,13 @@
 
   --nato-text: #f2f0fa;
   --nato-text-muted: #a7a2bc;
-  --nato-text-subtle: #7c7791;
+  --nato-text-subtle: #938eae;
 
   --nato-primary: #9075f2;
   --nato-primary-strong: #a88ff7;
   --nato-primary-tint: #2a2348;
+  --nato-cta: #6d4ae0;
+  --nato-cta-hover: #5836c4;
 
   --nato-success: #2cc79a;
   --nato-success-tint: #16352e;
@@ -130,6 +109,8 @@
   --color-primary: var(--nato-primary);
   --color-primary-strong: var(--nato-primary-strong);
   --color-primary-tint: var(--nato-primary-tint);
+  --color-cta: var(--nato-cta);
+  --color-cta-hover: var(--nato-cta-hover);
 
   --color-success: var(--nato-success);
   --color-success-tint: var(--nato-success-tint);
@@ -157,7 +138,11 @@
 }
 
 body {
-  background: var(--nato-bg);
+  /* A visible gradient wash on every page, not a flat fill, per the 2026-09-24
+     feedback that plain white/off-white pages read as too plain. Stays light and
+     bright throughout, this is a colour shift across the page, not a dark tone. */
+  background: linear-gradient(160deg, var(--nato-bg) 0%, var(--nato-primary-tint) 45%, var(--nato-bg) 100%);
+  background-attachment: fixed;
   color: var(--nato-text);
 }
 
@@ -167,4 +152,53 @@ h3,
 h4 {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
+}
+
+/* Landing page scroll animation, used with the useScrollReveal hook. A section
+   starts faded and slightly lower, then settles into place the first time it comes
+   into view. No animation library, plain CSS transitions do the whole job. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* A small entrance animation for anything that should animate in the moment the
+   page loads, no scrolling needed: the auth card (login/signup/forgot/reset) and
+   the landing page hero. Plain CSS keyframes, so nothing needs a mount effect just
+   to trigger a transition. */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up {
+    animation: none;
+  }
 }
